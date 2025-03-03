@@ -1,5 +1,5 @@
 // material-ui
-import { Grid, Stack, Typography, Box, TextField, Chip, Dialog, DialogActions, DialogContent, DialogTitle, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Tooltip } from '@mui/material';
+import { Grid, Stack, Typography, Box, TextField, Slider, Chip, Dialog, DialogActions, DialogContent, DialogTitle, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Tooltip } from '@mui/material';
 import { useState, useEffect, useMemo } from 'react';
 import PropTypes from 'prop-types';
 import { styled, useTheme } from '@mui/material/styles';
@@ -341,7 +341,6 @@ function GameCards ({ data, games }) {
 
   }, [ data, games ])
 
-
   const gamesColumns = useMemo(
     () => [
       {
@@ -474,54 +473,6 @@ function GameCards ({ data, games }) {
         <Typography variant="h2" textAlign={'center'}>Games Data</Typography>
         <ReactTable {...{ data: gamesData, columns: gamesColumns }} />
       </Stack>
-      {/* {gamesData.map((game) => (
-        <Grid item xs={12} sm={6} md={4} lg={3} key={game._id}>
-          <MainCard title={game.name} content={false} boxShadow>
-            <Stack mb={2} mt={3} spacing={1} paddingX={2} >
-
-              <Stack pb={1} display={"flex"} flexDirection={"row"} alignItems={"end"} gap={1}>
-                <Typography variant="h5" textAlign={'left'}>{`Launch Date - `}</Typography>
-                <Typography variant="h6" textAlign={'left'}>{`${game.launchDate.split("T")[0]}`}</Typography>
-              </Stack>
-
-              <Stack pb={1} display={"flex"} flexDirection={"row"} alignItems={"end"} gap={1}>
-                <Typography variant="h5" textAlign={'left'}>{`Daily Total GGR - `}</Typography>
-                <Typography variant="h6" textAlign={'left'}>{`${Number(game.dailyTotalGGR.toFixed(2)).toLocaleString()}`}</Typography>
-              </Stack>
-
-              <Stack pb={1} display={"flex"} flexDirection={"row"} alignItems={"end"} gap={1}>
-                <Typography variant="h5" textAlign={'left'}>{`Projected Total GGR - `}</Typography>
-                <Typography variant="h6" textAlign={'left'}>{`${Number(game.projectedTotalGGR.toFixed(2)).toLocaleString()}`}</Typography>
-              </Stack>
-              
-              {
-                Object.keys(game?.years)?.map((year) => 
-                  <Stack display={"flex"} flexDirection={"row"} alignItems={"end"} gap={1} key={year}>
-                    <Typography variant="h5" textAlign={'left'}>{`Total GGR ${year} - `}</Typography>
-                    <Typography variant="h6" textAlign={'left'}>{`${Number(game?.years[year].toFixed(2)).toLocaleString()}`}</Typography>
-                  </Stack>
-                )
-              }
-
-              <Stack pt={1} pb={1} display={"flex"} flexDirection={"row"} alignItems={"end"} gap={1}>
-                <Typography variant="h5" textAlign={'left'}>{`Lifetime GGR - `}</Typography>
-                <Typography variant="h6" textAlign={'left'}>{`${Number(game?.totalGGR.toFixed(2)).toLocaleString()}`}</Typography>
-              </Stack>
-
-              <Stack pb={1} display={"flex"} flexDirection={"row"} alignItems={"end"} gap={1}>
-                <Typography variant="h5" textAlign={'left'}>{`7 Day Average - `}</Typography>
-                <Typography variant="h6" textAlign={'left'}>{`${Number(game.weekAverage.toFixed(2)).toLocaleString()}`}</Typography>
-              </Stack>
-
-              <Stack pb={1} display={"flex"} flexDirection={"row"} alignItems={"end"} gap={1}>
-                <Typography variant="h5" textAlign={'left'}>{`7 Day Change - `}</Typography>
-                <Typography variant="h6" textAlign={'left'}>{ game.weekChangeColor }</Typography>
-              </Stack>
-
-            </Stack>
-          </MainCard>
-        </Grid>
-      ))} */}
     </Grid>
   );
 }
@@ -561,6 +512,7 @@ const ReportPage = () => {
 
   const [value, setValue] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [downloading, setDownloading] = useState(false);
   const [ data, setData ] = useState([]);
   const [ reorderData, setReorderData ] = useState([]);
   const [ games, setGames ] = useState([]);
@@ -581,9 +533,16 @@ const ReportPage = () => {
   const [dayLaunch14, setDayLaunch14] = useState([]);
   const [dayLaunch14Options, setDayLaunch14Options] = useState(lineChartOptions);
   const [users, setUsers] = useState([]);
+  const [userChanges, setUserChanges] = useState([]);
   const [spins, setSpins] = useState([]);
   const [spinsPerUser, setSpinsPerUser] = useState([]);
 
+  const [range, setRange] = useState([1, 37]);
+  const [maxRange, setMaxRange] = useState(0);
+  const handleRangeChange = (event, newRange) => {
+    console.log('newRange', newRange)
+    setRange(newRange);
+  };
 
   const launchColumns = useMemo(
     () => [
@@ -828,18 +787,65 @@ const ReportPage = () => {
     setWeekChangeData(change)
   }, [ uniqueDays, reorderData, games ])
 
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await axios.get(`api/reports`);
-        setData(response.data.data)
-        setGames(response.data.games)
-      } catch (error) {
-        
+  const fetchData = async () => {
+    try {
+      const response = await axios.get(`api/reports`);
+      console.log('response.data.data', response.data.data)
+      console.log('response.data.setGames', response.data.games)
+      setData(response.data.data)
+      setGames(response.data.games)
+      if( response.data.games.length > 0 ) {
+        const minLaunchDate = response.data.games.length > 0 ? response.data.games?.reduce((min, item) => 
+            new Date(item.launchDate) < new Date(min.launchDate) ? item : min
+        ).launchDate?.split('T')[0] : new Date().toISOString().split('T')[0];
+  
+        const sortData = [...response.data.data].filter((item) => new Date(item.summary) >= new Date(minLaunchDate));
+        sortData.sort((a, b) => new Date(a.summary) - new Date(b.summary));
+    
+        const totalGGRDates = [];
+        const totalGGRGroupedData = Object.values(
+          sortData.reduce((acc, { game, ggrEuro, summary }) => {
+            if (!acc[game]) {
+              acc[game] = { name: game, data: [], totalGGR: 0 }; // Added `totalGGR`
+            }
+    
+            const gameItem = response.data.games.find((g) => g.name === game);
+  
+            acc[game].totalGGR += new Date(gameItem?.launchDate) > new Date(summary) ? 0: ggrEuro;
+            acc[game].data.push(acc[game].totalGGR.toFixed(2));
+    
+            totalGGRDates.push(summary.slice(0, 10));
+            return acc;
+          }, {})
+        );
+        let maxDateLength = 0;
+        const filterData = totalGGRGroupedData.map((item) => {
+          maxDateLength = Math.max(maxDateLength, item.data.length);
+          return {...item, data: trimArrayEdges(item.data)}
+        });
+        console.log('min, max', maxDateLength)
+        setMaxRange(maxDateLength)
+        setRange([1, maxDateLength])
       }
+
+    } catch (error) {
+      
+    }
+  }
+
+  const checkLogin = async () => {
+    const status = localStorage.getItem("reportToken");
+    if( status !== "true" ) {
+      setOpen(true)
+    } else {
+      setOpen(false)
     }
     fetchData();
+  }
+
+  useEffect(() => {
+    checkLogin();
+    // fetchData();
   }, [])
 
   // Handle file selection
@@ -874,7 +880,8 @@ const ReportPage = () => {
           }
         });
 
-        setData(response.data.data)
+        // setData(response.data.data)
+        fetchData();
         setLoading(true);
       } catch (error) {
         console.error("Upload Error:", error);
@@ -886,13 +893,43 @@ const ReportPage = () => {
     }
   };
 
+  const handleDownload = async () => {
+    setDownloading(true)
+    try {
+      const response = await axios.get(`api/reports/download`, {
+        responseType: "blob", // Important for handling file downloads
+      });
+  
+      // Create a URL for the blob object
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", "report.xlsx"); // Set the file name
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (error) {
+      console.error("Download Error:", error);
+      openSnackbar({
+        open: true,
+        message: 'Excel not exists!',
+        variant: 'alert',
+        alert: {
+          color: 'error'
+        }
+      });
+    } finally {
+      setDownloading(false)
+    }
+  };
+
   useEffect(() => {
 
     if( games.length > 0 ) {
       const minLaunchDate = games.length > 0 ? games?.reduce((min, item) => 
           new Date(item.launchDate) < new Date(min.launchDate) ? item : min
       ).launchDate?.split('T')[0] : new Date().toISOString().split('T')[0];
-  
+
       const sortData = [...data].filter((item) => new Date(item.summary) >= new Date(minLaunchDate));
       sortData.sort((a, b) => new Date(a.summary) - new Date(b.summary));
   
@@ -917,15 +954,23 @@ const ReportPage = () => {
         maxDateLength = Math.max(maxDateLength, item.data.length);
         return {...item, data: trimArrayEdges(item.data)}
       });
-      setTotalGGR(filterData)
 
+      // Filter data based on selected range
+      const filteredData = filterData.map((item) => {
+        const startIdx = range[0] - 1;  // Adjust for zero indexing
+        const endIdx = range[1] - 1;  // Adjust for zero indexing
+        item.data = item.data.slice(startIdx, endIdx + 1); // Slice the data based on selected range
+        return item;
+      });
+
+      setTotalGGR(filteredData)
       const uniqueDates = [... new Set(totalGGRDates)];
       setUniqueDays(uniqueDates)
       const days = [];
-      for (let index = 0; index < maxDateLength; index++) {
-        days.push(`Day ${index + 1}`);
+      for (let index = range[0]; index <= range[1]; index++) {
+        days.push(`Day ${index}`);
       }
-      setDates(days)
+      setDates(days);
       setTotalGGROptions((pre) => ({...pre, xaxis: {categories: days, labels: {show: false}}}))
 
 
@@ -960,38 +1005,95 @@ const ReportPage = () => {
           return acc;
         }, {})
       );
-      const filterUsersData = usersData.map((item) => ({...item, data: trimArrayEdges(item.data)}))
+      // Apply the selected range to filter the users' data
+      const filterUsersData = usersData.map((item) => {
+        // Calculate the start and end indices based on the range
+        const startIdx = range[0] - 1;  // Adjust for zero indexing
+        const endIdx = range[1] - 1;  // Adjust for zero indexing
+        item.data = item.data.slice(startIdx, endIdx + 1);  // Slice the data based on the selected range
+        return { ...item, data: trimArrayEdges(item.data) };
+      });
+
       setUsers(filterUsersData)
-  
-  
+      // Function to calculate 5-day rolling sum and percentage change
+      const calculateRollingChange = (data) => {
+        if (data.length < 6) return []; // We need at least 6 days for the first comparison
+        
+        let rollingChanges = new Array(5).fill(0); // Fill the first 5 values with 0
+        for (let i = 5; i < data.length; i++) {
+          let firstSum = data.slice(i - 4, i + 1).reduce((sum, num) => sum + num, 0);  // Days 2-6
+          let secondSum = data.slice(i - 5, i).reduce((sum, num) => sum + num, 0);  // Days 1-5
+          
+          let percentageChange = (((firstSum - secondSum) / (secondSum || 1)) * 100).toFixed(2);
+          
+          rollingChanges.push(percentageChange);
+        }
+        
+        return rollingChanges;
+      };
+
+      const filterUserChangesData = usersData.map((item) => {
+        // Calculate the start and end indices based on the range
+        const startIdx = range[0] - 1;  // Adjust for zero indexing
+        const endIdx = range[1] - 1;  // Adjust for zero indexing
+        item.data = item.data.slice(startIdx, endIdx + 1);  // Slice the data based on the selected range
+        return { ...item, data: calculateRollingChange(item.data) };
+      });
+      console.log('filterUserChangesData', filterUserChangesData)
+      setUserChanges(filterUserChangesData)
+
+      console.log('usersData', usersData)
+
       const spinsData = Object.values(
         sortData.reduce((acc, { game, spins, summary }) => {
           if (!acc[game]) {
-            acc[game] = { name: game, data: []}; // Added `totalGGR`
+            acc[game] = { name: game, data: [] }; // Added `totalGGR`
           }
           const gameItem = games.find((g) => g.name === game);
-          acc[game].data.push(new Date(gameItem?.launchDate) > new Date(summary) ? 0: spins);
+      
+          // Check if the summary is within the selected range
+          acc[game].data.push(new Date(gameItem?.launchDate) > new Date(summary) ? 0 : spins);
           return acc;
         }, {})
       );
-      const filterSpinData = spinsData.map((item) => ({...item, data: trimArrayEdges(item.data)}))
-      setSpins(filterSpinData)
+      
+      // Apply the selected range to filter the spins' data
+      const filterSpinData = spinsData.map((item) => {
+        // Calculate the start and end indices based on the range
+        const startIdx = range[0] - 1;  // Adjust for zero indexing
+        const endIdx = range[1] - 1;  // Adjust for zero indexing
+        item.data = item.data.slice(startIdx, endIdx + 1);  // Slice the data based on the selected range
+        return { ...item, data: trimArrayEdges(item.data) };
+      });
+      
+      setSpins(filterSpinData);
   
   
       const spinsPerUserData = Object.values(
         sortData.reduce((acc, { game, spins, uniquePlayers, summary }) => {
           if (!acc[game]) {
-            acc[game] = { name: game, data: []}; // Added `totalGGR`
+            acc[game] = { name: game, data: [] }; // Added `totalGGR`
           }
           const gameItem = games.find((g) => g.name === game);
-          acc[game].data.push(new Date(gameItem?.launchDate) > new Date(summary) ? 0: (spins / uniquePlayers).toFixed(2));
+          acc[game].data.push(
+            new Date(gameItem?.launchDate) > new Date(summary) ? 0 : (spins / uniquePlayers).toFixed(2)
+          );
           return acc;
         }, {})
       );
-      const filterSpinPerUserData = spinsPerUserData.map((item) => ({...item, data: trimArrayEdges(item.data)}))
-      setSpinsPerUser(filterSpinPerUserData)
+      
+      // Apply the selected range to filter the spins per user data
+      const filterSpinPerUserData = spinsPerUserData.map((item) => {
+        // Calculate the start and end indices based on the range
+        const startIdx = range[0] - 1;  // Adjust for zero indexing
+        const endIdx = range[1] - 1;  // Adjust for zero indexing
+        item.data = item.data.slice(startIdx, endIdx + 1);  // Slice the data based on the selected range
+        return { ...item, data: trimArrayEdges(item.data) };
+      });
+      
+      setSpinsPerUser(filterSpinPerUserData);
     }
-  }, [ data, startDate, games ])
+  }, [ data, startDate, games, range ])
 
 
   const handleChange = (event, newValue) => {
@@ -1003,6 +1105,8 @@ const ReportPage = () => {
       const response = await axios.post(`api/account/check`, {
         email: ( onlyPassword ? user.email: email), password
       });
+
+      localStorage.setItem("reportToken", "true")
 
       setWrongPassword(false)
       setOpen(false)
@@ -1023,22 +1127,45 @@ const ReportPage = () => {
                 <label htmlFor="contained-button-file">
                   <Input accept=".xls,.xlsx" id="contained-button-file" type="file" onChange={handleFileChange} />
                   <LoadingButton loading={loading} variant="contained" component="span">
-                  Upload Excel
+                    Upload Excel
                   </LoadingButton>
                 </label>
+                  <LoadingButton sx={{ marginLeft: '10px' }} loading={downloading} variant="contained" component="span" onClick={handleDownload}>
+                    Download Excel
+                  </LoadingButton>
               </Grid>
 
               <Grid sx={{ marginTop: '0px !important' }} gap={2} display={"flex"} flexDirection={"row"} alignItems={"center"}>
-                <Link to={onlyPassword ? `/admin/report-type/users`: `/report-type/users`}>
+                <Typography variant="h5" textAlign={'right'}>LAUNCH</Typography>
+                <Link Link to={onlyPassword ? `/admin/report-type/users/launch` : `/report-type/users/launch`}>
                   <Button loading={loading} variant="contained" component="span">Users</Button>
                 </Link>
-                <Link to={onlyPassword ? `/admin/report-type/totalGGR`: `/report-type/totalGGR`}>
+                <Link to={onlyPassword ? `/admin/report-type/totalGGR/launch`: `/report-type/totalGGR/launch`}>
                   <Button loading={loading} variant="contained" component="span">Total GGR</Button>
                 </Link>
-                <Link to={onlyPassword ? `/admin/report-type/spinsPerUser`: `/report-type/spinsPerUser`}>
+                <Link to={onlyPassword ? `/admin/report-type/spinsPerUser/launch`: `/report-type/spinsPerUser/launch`}>
                   <Button loading={loading} variant="contained" component="span">Spins Per User</Button>
                 </Link>
-                <Link to={ onlyPassword ? `/admin/report-type/totalCoins`: `/report-type/totalCoins`}>
+                <Link to={ onlyPassword ? `/admin/report-type/totalCoins/launch`: `/report-type/totalCoins/launch`}>
+                  <Button loading={loading} variant="contained" component="span">Total Coins</Button>
+                </Link>
+              </Grid>
+            </Stack>
+
+            <Stack mb={3} spacing={1} display={"flex"} flexDirection={"row"} alignItems={"center"} gap={2} justifyContent={"end"}>
+
+              <Grid sx={{ marginTop: '0px !important' }} gap={2} display={"flex"} flexDirection={"row"} alignItems={"center"}>
+                <Typography variant="h5" textAlign={'right'}>EXCLUSIVE</Typography>
+                <Link to={onlyPassword ? `/admin/report-type/users/exclusive`: `/report-type/users/exclusive`}> 
+                  <Button loading={loading} variant="contained" component="span">Users</Button>
+                </Link>
+                <Link to={onlyPassword ? `/admin/report-type/totalGGR/exclusive`: `/report-type/totalGGR/exclusive`}>
+                  <Button loading={loading} variant="contained" component="span">Total GGR</Button>
+                </Link>
+                <Link to={onlyPassword ? `/admin/report-type/spinsPerUser/exclusive`: `/report-type/spinsPerUser/exclusive`}>
+                  <Button loading={loading} variant="contained" component="span">Spins Per User</Button>
+                </Link>
+                <Link to={ onlyPassword ? `/admin/report-type/totalCoins/exclusive`: `/report-type/totalCoins/exclusive`}>
                   <Button loading={loading} variant="contained" component="span">Total Coins</Button>
                 </Link>
               </Grid>
@@ -1068,6 +1195,20 @@ const ReportPage = () => {
               <ReactTable {...{ data: weekChangeData, columns: weekAverages, setData: setGames }} />
             </Stack>
 
+            <Stack mb={5} direction="row" spacing={3} alignItems="end" justifyContent="center">
+              <Typography variant="h2" textAlign={'right'} sx={{ width: '80%' }}>Day Setting</Typography>
+              <Slider
+                  getAriaLabel={() => 'Temperature range'}
+                  value={range}
+                  max={maxRange}
+                  min={1}
+                  onChange={handleRangeChange}
+                  valueLabelDisplay="auto"
+                  valueLabelFormat={(value) => `Day ${value}`}
+                  sx={{ width: '20%' }}
+                />
+            </Stack>
+
             <Stack mb={5}>
               <Typography variant="h2" textAlign={'center'}>Total GGR</Typography>
               <ReactApexChart options={totalGGROptions} series={totalGGR} type="line" height={500} />
@@ -1076,6 +1217,11 @@ const ReportPage = () => {
             <Stack mb={5}>
               <Typography variant="h2" textAlign={'center'}>USERS</Typography>
               <ReactApexChart options={totalGGROptions} series={users} type="line" height={500} />
+            </Stack>
+
+            <Stack mb={5}>
+              <Typography variant="h2" textAlign={'center'}>USER 5 Day Change (%)</Typography>
+              <ReactApexChart options={totalGGROptions} series={userChanges} type="line" height={500} />
             </Stack>
 
             <Stack mb={5}>

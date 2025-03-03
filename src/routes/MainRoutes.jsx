@@ -225,7 +225,7 @@ const MainRoutes = {
                 element: <ReportPage />
               }, 
               {
-                path: 'report-type/:type', 
+                path: 'report-type/:type/:tab', 
                 element: <ReportTypePage />
               }, 
               {

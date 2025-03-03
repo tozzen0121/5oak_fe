@@ -9,7 +9,7 @@ import axios, { fetcher } from 'utils/axios';
 
 
 const ReportTypePage = () => {
-    const { type } = useParams();
+    const { type, tab } = useParams();
     const navigate = useNavigate();
 
     const [ reports, setReports ] = useState([]);
@@ -46,12 +46,15 @@ const ReportTypePage = () => {
                 }, {});
 
                 const reportData = res.data.data;
-
-                const sortData = [...reportData].filter((item) => new Date(item.summary) >= new Date(gameData[item.game]));
-                sortData.sort((a, b) => new Date(a.summary) - new Date(b.summary));
-
+                // If the tab is 'EXCLUSIVE', filter out data before launch date
+                const filteredData = reportData.filter((item) => {
+                    const launchDate = gameData[item.game];
+                    return tab == 'exclusive' ? new Date(item.summary) < new Date(launchDate) : true;
+                });
+                // Sort by summary date
+                filteredData.sort((a, b) => new Date(a.summary) - new Date(b.summary));
                 const calculatedData = 
-                    sortData.reduce((acc, { game, ggrEuro, uniquePlayers, spins, betsEuro }) => {
+                    filteredData.reduce((acc, { game, ggrEuro, uniquePlayers, spins, betsEuro }) => {
                       if (!acc[game]) {
                         acc[game] = { name: game, users: [], totalGGR: [], spinsPerUser: [], totalCoins: [], totalGGRValue: 0, totalCoinValue: 0 }; // Added `totalGGR`
                       }
@@ -72,16 +75,25 @@ const ReportTypePage = () => {
                 const gameNames = Object.keys(gameData);
 
                 for (let i = 0; i < maxArrayLength; i++) {
-                    const obj = {"day": `Day ${i + 1}`};
+                    const obj = { "day": `Day ${i + 1}` };
                     for (let j = 0; j < gameNames.length; j++) {
-                        if( type === "users" ) {
-                            obj[gameNames[j]] = Number(i < calculatedData[`${gameNames[j]}`].users.length ? calculatedData[`${gameNames[j]}`].users[i] : 0);
-                        } else if ( type === "totalGGR" ) {
-                            obj[gameNames[j]] = Number(i < calculatedData[`${gameNames[j]}`].totalGGR.length ? calculatedData[`${gameNames[j]}`].totalGGR[i] : 0);
-                        } else if ( type === "spinsPerUser" ) {
-                            obj[gameNames[j]] = Number(i < calculatedData[`${gameNames[j]}`].spinsPerUser.length ? calculatedData[`${gameNames[j]}`].spinsPerUser[i] : 0);
-                        } else if ( type === "totalCoins" ) {
-                            obj[gameNames[j]] = Number(i < calculatedData[`${gameNames[j]}`].totalCoins.length ? calculatedData[`${gameNames[j]}`].totalCoins[i] : 0);
+                        const game = gameNames[j];
+                        const gameData = calculatedData[game];  // Get the game data
+                
+                        // Check if the game data exists and is properly structured
+                        if (gameData) {
+                            if (type === "users") {
+                                obj[game] = Number(i < gameData.users.length ? gameData.users[i] : 0);
+                            } else if (type === "totalGGR") {
+                                obj[game] = Number(i < gameData.totalGGR.length ? gameData.totalGGR[i] : 0);
+                            } else if (type === "spinsPerUser") {
+                                obj[game] = Number(i < gameData.spinsPerUser.length ? gameData.spinsPerUser[i] : 0);
+                            } else if (type === "totalCoins") {
+                                obj[game] = Number(i < gameData.totalCoins.length ? gameData.totalCoins[i] : 0);
+                            }
+                        } else {
+                            console.error(`Missing data for game: ${game}`);  // Log if game data is missing
+                            obj[game] = 0;  // Set to 0 if the game data is missing
                         }
                     }
                     reportsArr.push(obj);
