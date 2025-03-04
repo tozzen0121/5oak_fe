@@ -529,6 +529,11 @@ const ReportPage = () => {
 
   const [totalGGR, setTotalGGR] = useState([]);
   const [totalGGROptions, setTotalGGROptions] = useState(lineChartOptions);
+  const [userOptions, setUserOptions] = useState(lineChartOptions);
+  const [userChangesOptions, setUserChangesOptions] = useState(lineChartOptions);
+  const [spinDayOptions, setSpinDayOptionsOptions] = useState(lineChartOptions);
+  const [spinPlayerOptions, setSpinPlayerOptions] = useState(lineChartOptions);
+
   const [startDate, setStartDate] = useState(new Date().toISOString().split('T')[0])
   const [dayLaunch14, setDayLaunch14] = useState([]);
   const [dayLaunch14Options, setDayLaunch14Options] = useState(lineChartOptions);
@@ -932,7 +937,7 @@ const ReportPage = () => {
 
       const sortData = [...data].filter((item) => new Date(item.summary) >= new Date(minLaunchDate));
       sortData.sort((a, b) => new Date(a.summary) - new Date(b.summary));
-  
+      
       const totalGGRDates = [];
       const totalGGRGroupedData = Object.values(
         sortData.reduce((acc, { game, ggrEuro, summary }) => {
@@ -970,11 +975,6 @@ const ReportPage = () => {
       for (let index = range[0]; index <= range[1]; index++) {
         days.push(`Day ${index}`);
       }
-      setDates(days);
-      setTotalGGROptions((pre) => ({...pre, xaxis: {categories: days, labels: {show: false}}}))
-
-
-
       // Add SPU and CWPP for table data
       const reorderTemp = data?.map((item) => {
         return {
@@ -1005,16 +1005,14 @@ const ReportPage = () => {
           return acc;
         }, {})
       );
-      console.log('!!!!!!!!!!!', usersData)
       // Apply the selected range to filter the users' data
       const filterUsersData = usersData.map((item) => {
         // Calculate the start and end indices based on the range
         const startIdx = range[0] - 1;  // Adjust for zero indexing
         const endIdx = range[1] - 1;  // Adjust for zero indexing
         item.data = item.data.slice(startIdx, endIdx + 1);  // Slice the data based on the selected range
-        return { ...item, data: trimArrayEdges(item.data) };
+        return item;
       });
-
       setUsers(filterUsersData)
       // Function to calculate 5-day rolling sum and percentage change
       const calculateRollingChange = (data) => {
@@ -1033,25 +1031,36 @@ const ReportPage = () => {
         return rollingChanges;
       };
 
+      var i = 0;
       const usersData1 = Object.values(
         sortData.reduce((acc, { game, summary, uniquePlayers }) => {
           if (!acc[game]) {
-            acc[game] = { name: game, data: []}; // Added `totalGGR`
+            i = 0
+            acc[game] = { name: game, data: []}; // Added ``
           }
           const gameItem = games.find((g) => g.name === game);
           if(new Date(gameItem?.launchDate) <= new Date(summary)){
             acc[game].data.push(uniquePlayers);
+            i ++;
+            console.log('count', i, uniquePlayers);
           }
           return acc;
         }, {})
       );
 
-      const filterUserChangesData = usersData1.map((item) => {
+      const usersData2 = usersData1.map((item) => {
+        // Calculate the start and end indices based on the range
+        return { ...item, data: calculateRollingChange(item.data) };
+      });
+      console.log('usersData2', usersData2)
+      console.log('sortData', sortData)
+
+      const filterUserChangesData = usersData2.map((item) => {
         // Calculate the start and end indices based on the range
         const startIdx = range[0] - 1;  // Adjust for zero indexing
         const endIdx = range[1] - 1;  // Adjust for zero indexing
         item.data = item.data.slice(startIdx, endIdx + 1);  // Slice the data based on the selected range
-        return { ...item, data: calculateRollingChange(item.data) };
+        return { ...item, data: item.data };
       });
       console.log('filterUserChangesData', filterUserChangesData)
       setUserChanges(filterUserChangesData)
@@ -1104,7 +1113,13 @@ const ReportPage = () => {
         item.data = item.data.slice(startIdx, endIdx + 1);  // Slice the data based on the selected range
         return { ...item, data: trimArrayEdges(item.data) };
       });
-      
+      setDates(days);
+      console.log('days', days)
+      setTotalGGROptions((pre) => ({...pre, xaxis: {categories: days, labels: {show: false}}}))
+      setUserOptions((pre) => ({...pre, xaxis: {categories: days, labels: {show: false}}}))
+      setUserChangesOptions((pre) => ({...pre, xaxis: {categories: days, labels: {show: false}}}))
+      setSpinDayOptionsOptions((pre) => ({...pre, xaxis: {categories: days, labels: {show: false}}}))
+      setSpinPlayerOptions((pre) => ({...pre, xaxis: {categories: days, labels: {show: false}}}))
       setSpinsPerUser(filterSpinPerUserData);
     }
   }, [ data, startDate, games, range ])
@@ -1230,22 +1245,22 @@ const ReportPage = () => {
 
             <Stack mb={5}>
               <Typography variant="h2" textAlign={'center'}>USERS</Typography>
-              <ReactApexChart options={totalGGROptions} series={users} type="line" height={500} />
+              <ReactApexChart options={userOptions} series={users} type="line" height={500} />
             </Stack>
 
             <Stack mb={5}>
               <Typography variant="h2" textAlign={'center'}>USER 5 Day Change (%)</Typography>
-              <ReactApexChart options={totalGGROptions} series={userChanges} type="line" height={500} />
+              <ReactApexChart options={userChangesOptions} series={userChanges} type="line" height={500} />
             </Stack>
 
             <Stack mb={5}>
               <Typography variant="h2" textAlign={'center'}>SPINS PER DAY</Typography>
-              <ReactApexChart options={totalGGROptions} series={spins} type="line" height={500} />
+              <ReactApexChart options={spinDayOptions} series={spins} type="line" height={500} />
             </Stack>
 
             <Stack mb={5}>
               <Typography variant="h2" textAlign={'center'}>SPINS PER PLAYER</Typography>
-              <ReactApexChart options={totalGGROptions} series={spinsPerUser} type="line" height={500} />
+              <ReactApexChart options={spinPlayerOptions} series={spinsPerUser} type="line" height={500} />
             </Stack>
 
             <Stack>
