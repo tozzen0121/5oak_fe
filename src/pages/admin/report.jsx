@@ -997,11 +997,12 @@ const ReportPage = () => {
       const usersData = Object.values(
         sortData.reduce((acc, { game, summary, uniquePlayers }) => {
           if (!acc[game]) {
-            acc[game] = { name: game, data: []}; // Added `totalGGR`
+            acc[game] = { name: game, data: []}; // Added ``
           }
           const gameItem = games.find((g) => g.name === game);
-
-          acc[game].data.push(new Date(gameItem?.launchDate) > new Date(summary) ? 0: uniquePlayers);
+          if(new Date(gameItem?.launchDate) <= new Date(summary)){
+            acc[game].data.push(uniquePlayers);
+          }
           return acc;
         }, {})
       );
@@ -1013,6 +1014,7 @@ const ReportPage = () => {
         item.data = item.data.slice(startIdx, endIdx + 1);  // Slice the data based on the selected range
         return item;
       });
+      console.log('filterUsersData1', filterUsersData)
       setUsers(filterUsersData)
       // Function to calculate 5-day rolling sum and percentage change
       const calculateRollingChange = (data) => {
@@ -1031,18 +1033,14 @@ const ReportPage = () => {
         return rollingChanges;
       };
 
-      var i = 0;
       const usersData1 = Object.values(
         sortData.reduce((acc, { game, summary, uniquePlayers }) => {
           if (!acc[game]) {
-            i = 0
             acc[game] = { name: game, data: []}; // Added ``
           }
           const gameItem = games.find((g) => g.name === game);
           if(new Date(gameItem?.launchDate) <= new Date(summary)){
             acc[game].data.push(uniquePlayers);
-            i ++;
-            console.log('count', i, uniquePlayers);
           }
           return acc;
         }, {})
@@ -1053,7 +1051,6 @@ const ReportPage = () => {
         return { ...item, data: calculateRollingChange(item.data) };
       });
       console.log('usersData2', usersData2)
-      console.log('sortData', sortData)
 
       const filterUserChangesData = usersData2.map((item) => {
         // Calculate the start and end indices based on the range

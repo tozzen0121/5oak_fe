@@ -49,8 +49,9 @@ const ReportTypePage = () => {
                 // If the tab is 'EXCLUSIVE', filter out data before launch date
                 const filteredData = reportData.filter((item) => {
                     const launchDate = gameData[item.game];
-                    return tab == 'exclusive' ? new Date(item.summary) < new Date(launchDate) : true;
+                    return tab == 'exclusive' ? new Date(item.summary) < new Date(launchDate) : new Date(launchDate) <= new Date(item.summary);
                 });
+                console.log('filteredDatafilteredData', filteredData)
                 // Sort by summary date
                 filteredData.sort((a, b) => new Date(a.summary) - new Date(b.summary));
                 const calculatedData = 
