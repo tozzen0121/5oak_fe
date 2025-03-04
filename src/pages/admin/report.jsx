@@ -1221,8 +1221,8 @@ const ReportPage = () => {
               <ReactTable {...{ data: weekChangeData, columns: weekAverages, setData: setGames }} />
             </Stack>
 
-            <Stack mb={5} direction="row" spacing={3} alignItems="end" justifyContent="center">
-              <Typography variant="h2" textAlign={'right'} sx={{ width: '80%' }}>Day Setting</Typography>
+            <Stack mb={5} direction="row" spacing={3} alignItems="center" justifyContent="center">
+              <Typography variant="h2">Time Period</Typography>
               <Slider
                   getAriaLabel={() => 'Temperature range'}
                   value={range}
@@ -1231,7 +1231,7 @@ const ReportPage = () => {
                   onChange={handleRangeChange}
                   valueLabelDisplay="auto"
                   valueLabelFormat={(value) => `Day ${value}`}
-                  sx={{ width: '20%' }}
+                  sx={{ width: '40%' }}
                 />
             </Stack>
 
