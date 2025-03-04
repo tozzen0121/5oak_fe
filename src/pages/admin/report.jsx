@@ -1005,6 +1005,7 @@ const ReportPage = () => {
           return acc;
         }, {})
       );
+      console.log('!!!!!!!!!!!', usersData)
       // Apply the selected range to filter the users' data
       const filterUsersData = usersData.map((item) => {
         // Calculate the start and end indices based on the range
@@ -1032,7 +1033,20 @@ const ReportPage = () => {
         return rollingChanges;
       };
 
-      const filterUserChangesData = usersData.map((item) => {
+      const usersData1 = Object.values(
+        sortData.reduce((acc, { game, summary, uniquePlayers }) => {
+          if (!acc[game]) {
+            acc[game] = { name: game, data: []}; // Added `totalGGR`
+          }
+          const gameItem = games.find((g) => g.name === game);
+          if(new Date(gameItem?.launchDate) <= new Date(summary)){
+            acc[game].data.push(uniquePlayers);
+          }
+          return acc;
+        }, {})
+      );
+
+      const filterUserChangesData = usersData1.map((item) => {
         // Calculate the start and end indices based on the range
         const startIdx = range[0] - 1;  // Adjust for zero indexing
         const endIdx = range[1] - 1;  // Adjust for zero indexing
@@ -1042,7 +1056,7 @@ const ReportPage = () => {
       console.log('filterUserChangesData', filterUserChangesData)
       setUserChanges(filterUserChangesData)
 
-      console.log('usersData', usersData)
+      console.log('usersData', usersData1)
 
       const spinsData = Object.values(
         sortData.reduce((acc, { game, spins, summary }) => {
