@@ -315,6 +315,8 @@ function GameCards ({ data, games }) {
             remainDays: 0, 
             weekAverage: 0, 
             weekChange: 0, 
+            weekSum1: 0,
+            weekSum2: 0, 
             weekChangeColor: '',
             dailyTotalGGR: 0, 
             projectedTotalGGR: 0
@@ -368,6 +370,8 @@ function GameCards ({ data, games }) {
             .filter(d => d.game === game && new Date(d.summary) >= secLatestWeekStart && new Date(d.summary) <= secLatestWeekEnd)
             .map((d) => d.ggrEuro);
 
+          acc[game].weekSum1 = acc[game].latestWeekGGR.reduce((a, b) => a + b, 0)
+          acc[game].weekSum2 = acc[game].secLatestWeekGGR.reduce((a, b) => a + b, 0)
           acc[game].weekAverage = acc[game].latestWeekGGR.reduce((a, b) => a + b, 0) / acc[game].latestWeekGGR.length;
           acc[game].weekChange = (acc[game].latestWeekGGR.reduce((a, b) => a + b, 0) - acc[game].secLatestWeekGGR.reduce((a, b) => a + b, 0)) / acc[game].secLatestWeekGGR.reduce((a, b) => a + b, 0) * 100;
           acc[game].weekChangeColor = <span style={{ color: acc[game].weekChange > 0 ? "green": "red" }}>{`${Number(acc[game].weekChange.toFixed(2)).toLocaleString()} %`}</span>
@@ -534,7 +538,7 @@ function GameCards ({ data, games }) {
               <Typography variant="h5" textAlign={'center'}>7 Day Change -</Typography>
               <Typography variant="h6" textAlign={'center'}>
                 {
-                  (gamesData.reduce((acc, game) => acc + game.weekChange, 0).toFixed(2)) + "%"
+                  (gamesData.reduce((acc, game) => acc + game.weekChange, 0) / gamesData.length).toFixed(2) + "%"
                 }
               </Typography>
             </Stack>
@@ -577,7 +581,7 @@ function GameCards ({ data, games }) {
         <ReactTable {...{ data: gamesData, columns: gamesColumns }} />
       </Stack>
       <Stack mb={5} spacing={3}>
-        <Typography variant="h2" textAlign={'center'}>TOTAL GGR - QAUTER</Typography>
+        <Typography variant="h2" textAlign={'center'}>TOTAL GGR - QUARTER</Typography>
         <ReactTable {...{ data: tableData, columns: totalRevenueTableColumn, setData: () => {} }} />
       </Stack>
     </Grid>
