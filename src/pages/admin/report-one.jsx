@@ -134,14 +134,13 @@ const ReportOnePage = () => {
                 sortData.sort((a, b) => new Date(a.summary) - new Date(b.summary));
 
                 const totalGGRGroupedData = Object.values(
-                    sortData.reduce((acc, { game, ggrEuro, summary }) => {
+                    sortData.reduce((acc, { game, ggrEuro, summary, uniquePlayers}) => {
                       if (!acc[game]) {
                         acc[game] = { name: game, data: [], totalGGR: 0, dataSum: [] }; // Added `totalGGR`
                       }
-            
                       acc[game].totalGGR += ggrEuro;
                       acc[game].dataSum.push(acc[game].totalGGR.toFixed(2));
-                      acc[game].data.push(ggrEuro.toFixed(2));
+                      acc[game].data.push(uniquePlayers);
                       return acc;
                     }, {})
                 );

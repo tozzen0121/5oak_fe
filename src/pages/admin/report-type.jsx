@@ -51,21 +51,20 @@ const ReportTypePage = () => {
                     const launchDate = gameData[item.game];
                     return tab == 'exclusive' ? new Date(item.summary) < new Date(launchDate) : new Date(launchDate) <= new Date(item.summary);
                 });
-                console.log('filteredDatafilteredData', filteredData)
                 // Sort by summary date
                 filteredData.sort((a, b) => new Date(a.summary) - new Date(b.summary));
                 const calculatedData = 
                     filteredData.reduce((acc, { game, ggrEuro, uniquePlayers, spins, betsEuro }) => {
                       if (!acc[game]) {
-                        acc[game] = { name: game, users: [], totalGGR: [], spinsPerUser: [], totalCoins: [], totalGGRValue: 0, totalCoinValue: 0 }; // Added `totalGGR`
+                        acc[game] = { name: game, users: [], totalGGR: [], spinsPerUser: [], totalCoins: [], cwpp: [], totalGGRValue: 0, totalCoinValue: 0 }; // Added `totalGGR`
                       }
-
             
                       acc[game].totalGGRValue += ggrEuro;
                       acc[game].totalCoinValue += betsEuro;
                       acc[game].users.push(uniquePlayers.toFixed(2));
                       acc[game].totalGGR.push(acc[game].totalGGRValue.toFixed(2));
                       acc[game].spinsPerUser.push((spins / uniquePlayers).toFixed(2));
+                      acc[game].cwpp.push((betsEuro / uniquePlayers).toFixed(2));
                       acc[game].totalCoins.push(acc[game].totalCoinValue.toFixed(2));
                       return acc;
                     }, {})
@@ -91,6 +90,8 @@ const ReportTypePage = () => {
                                 obj[game] = Number(i < gameData.spinsPerUser.length ? gameData.spinsPerUser[i] : 0);
                             } else if (type === "totalCoins") {
                                 obj[game] = Number(i < gameData.totalCoins.length ? gameData.totalCoins[i] : 0);
+                            } else if (type === "cwpp") {
+                                obj[game] = Number(i < gameData.cwpp.length ? gameData.cwpp[i] : 0);
                             }
                         } else {
                             console.error(`Missing data for game: ${game}`);  // Log if game data is missing
@@ -115,6 +116,8 @@ const ReportTypePage = () => {
             setTitle("Spins Per User");
         } else if ( type === "totalCoins" ) {
             setTitle("Total Coins");
+        } else if ( type === "cwpp" ){
+            setTitle("CWPP");
         }
     }, [])
 

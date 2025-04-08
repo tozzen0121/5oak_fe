@@ -256,12 +256,49 @@ function GameCards ({ data, games }) {
   const [ onlyPassword, setOnlyPassword ] = useState(location.pathname === "/admin/report")
   const [ gamesData, setGamesData ] = useState([]);
   const [ years, setYears ] = useState([]);
+  const [ quaters, setQuater ] = useState([]);
 
   useEffect(() => {
 
+    const getQuarter = (date) => {
+      const month = date.getUTCMonth();
+      return Math.floor(month / 3) + 1;
+    };
+  
+    const getAllQuartersFromDates = (data) => {
+      const dates = data.map(item => new Date(item.summary));
+  
+      // Sort to find min and max dates
+      const sorted = dates.sort((a, b) => a - b);
+      const firstDate = sorted[0];
+      const lastDate = sorted[sorted.length - 1];
+  
+      const startYear = firstDate.getFullYear();
+      const startQuarter = getQuarter(firstDate);
+  
+      const endYear = lastDate.getFullYear();
+      const endQuarter = getQuarter(lastDate);
+  
+      const allQuarters = [];
+  
+      for (let year = startYear; year <= endYear; year++) {
+        for (let q = 1; q <= 4; q++) {
+          if (year === startYear && q < startQuarter) continue;
+          if (year === endYear && q > endQuarter) break;
+          allQuarters.push(`${year}-Q${q}`);
+        }
+      }
+  
+      return allQuarters;
+    };
+
     const uniqueYears = [...new Set(data.map((item) => item.summary.split('-')[0]))];
     setYears(uniqueYears);
-
+    if (data && data.length > 0) {
+      const allQuarters = getAllQuartersFromDates(data);
+      console.log('allQuarters', allQuarters)
+      setQuater(allQuarters);
+    }
     const gameData = Object.values(
       data.reduce((acc, { game, summary, betsEuro, winsEuro, ggrEuro, avgBet, spins, uniquePlayers }) => {
         if( !acc[game] ) {
@@ -283,7 +320,6 @@ function GameCards ({ data, games }) {
             projectedTotalGGR: 0
           }
         }
-
         const gameData = games.find((g) => g.name === game)
         acc[game].launchDate = gameData.launchDate
         acc[game]._id = gameData._id
@@ -300,6 +336,11 @@ function GameCards ({ data, games }) {
           if( !acc[game][`totalGGR_${year}`] ) acc[game][`totalGGR_${year}`] = 0;
           acc[game][`totalGGR_${year}`] += ggrEuro
 
+          const currentQuater = getQuarter(new Date(summary));
+          const yearQuater = `${year}-Q${currentQuater}`
+
+          if( !acc[game][`totalGGR_${yearQuater}`] ) acc[game][`totalGGR_${yearQuater}`] = 0;
+          acc[game][`totalGGR_${yearQuater}`] += ggrEuro
           const today = new Date(acc[game].maxDate);
           const endOfYear = new Date(today.getFullYear(), 11, 31);
           acc[game].remainDays = Math.ceil((endOfYear - today) / (1000 * 60 * 60 * 24));
@@ -337,10 +378,10 @@ function GameCards ({ data, games }) {
       }, {})
     )
 
+    console.log('gameDatagameDatagameData', gameData)
     setGamesData(gameData)
 
   }, [ data, games ])
-
   const gamesColumns = useMemo(
     () => [
       {
@@ -409,6 +450,41 @@ function GameCards ({ data, games }) {
     [years]
   );
 
+  // Now, let's compute the tableData using the available quarters
+  const tableData = useMemo(() => {
+    const data = [];
+
+    quaters.forEach((quarter) => {
+      const row = { quarter };
+      gamesData.forEach((game) => {
+        const gameTotalGGR = game[`totalGGR_${quarter}`] !== undefined ? game[`totalGGR_${quarter}`].toFixed(2) : 0;
+        row[game.name] = gameTotalGGR;
+      });
+
+      data.push(row); // Push the row data into the table data
+    });
+
+    return data;
+  }, [quaters, gamesData]);
+
+  // Columns for the table
+  const totalRevenueTableColumn = useMemo(() => {
+    const gameNames = games.map((game) => game.name); // Get game names
+    return [
+      {
+        header: 'Quarter',
+        accessorKey: 'quarter',
+        dataType: 'text'
+      },
+      ...gameNames.map((gameName) => ({
+        header: gameName,
+        accessorKey: gameName,
+        dataType: 'number',
+        cell: (info) => info.getValue() ?? 0 // Default to 0 if data is missing
+      }))
+    ];
+  }, [games]);
+
   return (
     <Grid item xs={12} lg={12}>
       <Grid container spacing={2} mb={5}>
@@ -454,7 +530,7 @@ function GameCards ({ data, games }) {
         <Grid item xs={6} lg={3}>
           <MainCard sx={{ height: "100%", display: "flex", alignItems: "center" }}>
             {
-              years?.map((y, index) => 
+              quaters?.map((y, index) => 
                 <Stack direction="row" spacing={1} alignItems="end" justifyContent="start" key={index} >
                   <Typography variant="h5" textAlign={'center'}>{`Total GGR ${y} - `}</Typography>
                   <Typography variant="h6" textAlign={'center'}>
@@ -473,10 +549,13 @@ function GameCards ({ data, games }) {
         <Typography variant="h2" textAlign={'center'}>Games Data</Typography>
         <ReactTable {...{ data: gamesData, columns: gamesColumns }} />
       </Stack>
+      <Stack mb={5} spacing={3}>
+        <Typography variant="h2" textAlign={'center'}>TOTAL GGR - QAUTER</Typography>
+        <ReactTable {...{ data: tableData, columns: totalRevenueTableColumn, setData: () => {} }} />
+      </Stack>
     </Grid>
   );
 }
-
 
 
 const lineChartOptions = {
@@ -548,7 +627,6 @@ const ReportPage = () => {
     console.log('newRange', newRange)
     setRange(newRange);
   };
-
   const launchColumns = useMemo(
     () => [
       {
@@ -1175,6 +1253,9 @@ const ReportPage = () => {
                 <Link to={ onlyPassword ? `/admin/report-type/totalCoins/launch`: `/report-type/totalCoins/launch`}>
                   <Button loading={loading} variant="contained" component="span">Total Coins</Button>
                 </Link>
+                <Link to={ onlyPassword ? `/admin/report-type/cwpp/launch`: `/report-type/cwpp/launch`}>
+                  <Button loading={loading} variant="contained" component="span">CWPP</Button>
+                </Link>
               </Grid>
             </Stack>
 
@@ -1193,6 +1274,9 @@ const ReportPage = () => {
                 </Link>
                 <Link to={ onlyPassword ? `/admin/report-type/totalCoins/exclusive`: `/report-type/totalCoins/exclusive`}>
                   <Button loading={loading} variant="contained" component="span">Total Coins</Button>
+                </Link>
+                <Link to={ onlyPassword ? `/admin/report-type/cwpp/exclusive`: `/report-type/cwpp/exclusive`}>
+                  <Button loading={loading} variant="contained" component="span">CWPP</Button>
                 </Link>
               </Grid>
             </Stack>
