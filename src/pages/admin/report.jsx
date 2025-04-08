@@ -457,7 +457,8 @@ function GameCards ({ data, games }) {
     quaters.forEach((quarter) => {
       const row = { quarter };
       gamesData.forEach((game) => {
-        const gameTotalGGR = game[`totalGGR_${quarter}`] !== undefined ? game[`totalGGR_${quarter}`].toFixed(2) : 0;
+        const gameTotalGGR = game[`totalGGR_${quarter}`] !== undefined ? Number(game[`totalGGR_${quarter}`].toFixed(2)).toLocaleString() : 0;
+        console.log('gameTotalGGR', gameTotalGGR)
         row[game.name] = gameTotalGGR;
       });
 
@@ -508,6 +509,32 @@ function GameCards ({ data, games }) {
               <Typography variant="h6" textAlign={'center'}>
                 {
                   Number(gamesData.reduce((acc, game) => acc + game.dailyTotalGGR, 0)).toLocaleString()
+                }
+              </Typography>
+            </Stack>
+          </MainCard>
+        </Grid>
+
+        <Grid item xs={6} lg={3}>
+          <MainCard sx={{ height: "100%", display: "flex", alignItems: "center" }} >
+            <Stack direction="row" spacing={1} alignItems="end" justifyContent="center">
+              <Typography variant="h5" textAlign={'center'}>7 Day Average GGR -</Typography>
+              <Typography variant="h6" textAlign={'center'}>
+                {
+                  Number(gamesData.reduce((acc, game) => acc + game.weekAverage, 0)).toLocaleString()
+                }
+              </Typography>
+            </Stack>
+          </MainCard>
+        </Grid>
+
+        <Grid item xs={6} lg={3}>
+          <MainCard sx={{ height: "100%", display: "flex", alignItems: "center" }} >
+            <Stack direction="row" spacing={1} alignItems="end" justifyContent="center">
+              <Typography variant="h5" textAlign={'center'}>7 Day Change -</Typography>
+              <Typography variant="h6" textAlign={'center'}>
+                {
+                  (gamesData.reduce((acc, game) => acc + game.weekChange, 0).toFixed(2)) + "%"
                 }
               </Typography>
             </Stack>
