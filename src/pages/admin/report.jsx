@@ -537,9 +537,11 @@ function GameCards ({ data, games }) {
             <Stack direction="row" spacing={1} alignItems="end" justifyContent="center">
               <Typography variant="h5" textAlign={'center'}>7 Day Change -</Typography>
               <Typography variant="h6" textAlign={'center'}>
-                {
-                  (gamesData.reduce((acc, game) => acc + game.weekChange, 0) / gamesData.length).toFixed(2) + "%"
-                }
+              {
+                ((gamesData.reduce((acc, game) => acc + game.weekSum1, 0) - 
+                  gamesData.reduce((acc, game) => acc + game.weekSum2, 0)) / 
+                  gamesData.reduce((acc, game) => acc + game.weekSum2, 0) * 100).toFixed(2) + "%"
+              }
               </Typography>
             </Stack>
           </MainCard>
