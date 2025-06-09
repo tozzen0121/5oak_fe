@@ -7,6 +7,7 @@ import MainCard from 'components/MainCard';
 import { ReactTable, separateByComma } from "./report";
 import axios, { fetcher } from 'utils/axios';
 
+import ReactFixedHeaderTable from 'components/ReactFixedHeaderTable';
 
 const ReportTypePage = () => {
     const { type, tab } = useParams();
@@ -136,7 +137,12 @@ const ReportTypePage = () => {
     
                     <Stack mb={5} spacing={3}>
                         <Typography variant="h2" textAlign={'center'}>{ title }</Typography>
-                        <ReactTable {...{ data: reports, columns: tableColumn, setData: () => {} }} />
+                        <ReactFixedHeaderTable 
+                          data={reports} 
+                          columns={tableColumn} 
+                          setData={() => {}} 
+                          height="600px"
+                        />
                     </Stack>
     
                 </Grid>

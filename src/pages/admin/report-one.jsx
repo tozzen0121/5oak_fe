@@ -4,7 +4,8 @@ import { Grid, Stack, Typography, Box, TextField, Chip, Dialog, DialogActions, D
 
 import ComponentSkeleton from 'sections/components-overview/ComponentSkeleton';
 import MainCard from 'components/MainCard';
-import { ReactTable, separateByComma } from "./report";
+import { separateByComma } from "./report";
+import ReactFixedHeaderTable from 'components/ReactFixedHeaderTable';
 
 import axios, { fetcher } from 'utils/axios';
 import { useEffect, useState, useMemo } from "react";
@@ -219,7 +220,12 @@ const ReportOnePage = () => {
 
                 <Stack mb={5} spacing={3}>
                     <Typography variant="h2" textAlign={'center'}>Game Data</Typography>
-                    <ReactTable {...{ data: reports, columns: tableColumn, setData: () => {} }} />
+                    <ReactFixedHeaderTable 
+                        data={reports} 
+                        columns={tableColumn} 
+                        setData={() => {}} 
+                        height="600px"
+                    />
                 </Stack>
 
             </Grid>

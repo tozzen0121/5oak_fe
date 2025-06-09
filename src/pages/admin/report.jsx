@@ -296,7 +296,6 @@ function GameCards ({ data, games }) {
     setYears(uniqueYears);
     if (data && data.length > 0) {
       const allQuarters = getAllQuartersFromDates(data);
-      console.log('allQuarters', allQuarters)
       setQuater(allQuarters);
     }
     const gameData = Object.values(
@@ -319,13 +318,16 @@ function GameCards ({ data, games }) {
             weekSum2: 0, 
             weekChangeColor: '',
             dailyTotalGGR: 0, 
-            projectedTotalGGR: 0
+            projectedTotalGGR: 0,
+            LifeTimePayout: 0,
+            betsEuro: betsEuro,
+            winsEuro: winsEuro,
           }
         }
         const gameData = games.find((g) => g.name === game)
         acc[game].launchDate = gameData.launchDate
         acc[game]._id = gameData._id
-
+        console.log('gameData', gameData)
         if( new Date(gameData.launchDate) <= new Date(summary) ) {
           const isMaxDate = new Date(acc[game].maxDate) < new Date(summary)
           acc[game].maxDate = isMaxDate ? summary: acc[game].maxDate
@@ -376,13 +378,13 @@ function GameCards ({ data, games }) {
           acc[game].weekChange = (acc[game].latestWeekGGR.reduce((a, b) => a + b, 0) - acc[game].secLatestWeekGGR.reduce((a, b) => a + b, 0)) / acc[game].secLatestWeekGGR.reduce((a, b) => a + b, 0) * 100;
           acc[game].weekChangeColor = <span style={{ color: acc[game].weekChange > 0 ? "green": "red" }}>{`${Number(acc[game].weekChange.toFixed(2)).toLocaleString()} %`}</span>
           acc[game].projectedTotalGGR = acc[game].totalGGR + acc[game].weekAverage * acc[game].remainDays
+          acc[game].LifeTimePayout = (acc[game].winsEuro / acc[game].betsEuro).toFixed(2);
         }
 
         return acc;
       }, {})
     )
-
-    console.log('gameDatagameDatagameData', gameData)
+    console.log('gameData', gameData)
     setGamesData(gameData)
 
   }, [ data, games ])
@@ -442,6 +444,11 @@ function GameCards ({ data, games }) {
         dataType: 'text', 
       },
       {
+        header: 'Lifetime Payout',
+        accessorKey: 'LifeTimePayout',
+        dataType: 'text', 
+      },
+      {
         header: 'Latest Report Date',
         accessorKey: 'maxDate',
         dataType: 'text', 
@@ -462,7 +469,6 @@ function GameCards ({ data, games }) {
       const row = { quarter };
       gamesData.forEach((game) => {
         const gameTotalGGR = game[`totalGGR_${quarter}`] !== undefined ? Number(game[`totalGGR_${quarter}`].toFixed(2)).toLocaleString() : 0;
-        console.log('gameTotalGGR', gameTotalGGR)
         row[game.name] = gameTotalGGR;
       });
 
@@ -657,7 +663,6 @@ const ReportPage = () => {
   const [range, setRange] = useState([1, 37]);
   const [maxRange, setMaxRange] = useState(0);
   const handleRangeChange = (event, newRange) => {
-    console.log('newRange', newRange)
     setRange(newRange);
   };
   const launchColumns = useMemo(
@@ -757,6 +762,47 @@ const ReportPage = () => {
         accessorKey: 'CWPP',
         dataType: 'text'
       },
+      {
+        header: 'Lifetime Payout',
+        accessorKey: 'LP',
+        dataType: 'text'
+      },
+    ],
+    []
+  );
+
+  const weekChanges = useMemo(
+    () => [
+      {
+        header: 'Game',
+        accessorKey: 'name',
+        dataType: 'text'
+      },
+      {
+        header: 'GGR',
+        accessorKey: 'ggrEuro',
+        dataType: 'text'
+      },
+      {
+        header: 'SPINS',
+        accessorKey: 'spins',
+        dataType: 'text'
+      },
+      {
+        header: 'USERS',
+        accessorKey: 'uniquePlayers',
+        dataType: 'text'
+      },
+      {
+        header: 'SPU',
+        accessorKey: 'SPU',
+        dataType: 'text'
+      },
+      {
+        header: 'CWPP',
+        accessorKey: 'CWPP',
+        dataType: 'text'
+      },
     ],
     []
   );
@@ -787,9 +833,9 @@ const ReportPage = () => {
     const maxDates = {};
 
     const oneWeekData = Object.values(
-      reorderData.reduce((acc, { game, summary, ggrEuro, spins, uniquePlayers, betsEuro }) => {
+      reorderData.reduce((acc, { game, summary, ggrEuro, spins, uniquePlayers, betsEuro, winsEuro }) => {
         if (!acc[game]) {
-          acc[game] = { name: game, ggrEuro: [], spins: [], uniquePlayers: [], SPU: [], CWPP: [] }; // Added `totalGGR`
+          acc[game] = { name: game, ggrEuro: [], spins: [], uniquePlayers: [], SPU: [], CWPP: [], LP: [] }; // Added `totalGGR`
         }
 
         const gameItem = games.find((g) => g.name === game);
@@ -811,6 +857,7 @@ const ReportPage = () => {
           acc[game].uniquePlayers.push(uniquePlayers);
           acc[game].SPU.push(spins / uniquePlayers);
           acc[game].CWPP.push(betsEuro / uniquePlayers);
+          acc[game].LP.push(winsEuro / betsEuro);
         }
 
         return acc;
@@ -823,6 +870,7 @@ const ReportPage = () => {
       const uniquePlayers = data.uniquePlayers;
       const SPU = data.SPU;
       const CWPP = data.CWPP;
+      const LP = data.LP;
 
       return {
         name: data.name, 
@@ -831,6 +879,7 @@ const ReportPage = () => {
         uniquePlayers: Number((uniquePlayers.length > 0 ? uniquePlayers.reduce((sum, num) => sum + num, 0) / uniquePlayers.length : 0).toFixed(2)).toLocaleString(), 
         SPU: Number((SPU.length > 0 ? SPU.reduce((sum, num) => sum + num, 0) / SPU.length : 0).toFixed(2)).toLocaleString(), 
         CWPP: Number((CWPP.length > 0 ? CWPP.reduce((sum, num) => sum + num, 0) / CWPP.length : 0).toFixed(2)).toLocaleString(), 
+        LP: Number((LP.length > 0 ? LP.reduce((sum, num) => sum + num, 0) / LP.length : 0).toFixed(2)).toLocaleString(), 
       };
     });
     setWeekAveragesData(avg)
@@ -906,8 +955,6 @@ const ReportPage = () => {
   const fetchData = async () => {
     try {
       const response = await axios.get(`api/reports`);
-      console.log('response.data.data', response.data.data)
-      console.log('response.data.setGames', response.data.games)
       setData(response.data.data)
       setGames(response.data.games)
       if( response.data.games.length > 0 ) {
@@ -939,7 +986,6 @@ const ReportPage = () => {
           maxDateLength = Math.max(maxDateLength, item.data.length);
           return {...item, data: trimArrayEdges(item.data)}
         });
-        console.log('min, max', maxDateLength)
         setMaxRange(maxDateLength)
         setRange([1, maxDateLength])
       }
@@ -1125,7 +1171,6 @@ const ReportPage = () => {
         item.data = item.data.slice(startIdx, endIdx + 1);  // Slice the data based on the selected range
         return item;
       });
-      console.log('filterUsersData1', filterUsersData)
       setUsers(filterUsersData)
       // Function to calculate 5-day rolling sum and percentage change
       const calculateRollingChange = (data) => {
@@ -1161,7 +1206,6 @@ const ReportPage = () => {
         // Calculate the start and end indices based on the range
         return { ...item, data: calculateRollingChange(item.data) };
       });
-      console.log('usersData2', usersData2)
 
       const filterUserChangesData = usersData2.map((item) => {
         // Calculate the start and end indices based on the range
@@ -1170,10 +1214,7 @@ const ReportPage = () => {
         item.data = item.data.slice(startIdx, endIdx + 1);  // Slice the data based on the selected range
         return { ...item, data: item.data };
       });
-      console.log('filterUserChangesData', filterUserChangesData)
       setUserChanges(filterUserChangesData)
-
-      console.log('usersData', usersData1)
 
       const spinsData = Object.values(
         sortData.reduce((acc, { game, spins, summary }) => {
@@ -1222,7 +1263,6 @@ const ReportPage = () => {
         return { ...item, data: trimArrayEdges(item.data) };
       });
       setDates(days);
-      console.log('days', days)
       setTotalGGROptions((pre) => ({...pre, xaxis: {categories: days, labels: {show: false}}}))
       setUserOptions((pre) => ({...pre, xaxis: {categories: days, labels: {show: false}}}))
       setUserChangesOptions((pre) => ({...pre, xaxis: {categories: days, labels: {show: false}}}))
@@ -1335,7 +1375,7 @@ const ReportPage = () => {
 
             <Stack mb={5} spacing={3}>
               <Typography variant="h2" textAlign={'center'}>7 Day Change (%) </Typography>
-              <ReactTable {...{ data: weekChangeData, columns: weekAverages, setData: setGames }} />
+              <ReactTable {...{ data: weekChangeData, columns: weekChanges, setData: setGames }} />
             </Stack>
 
             <Stack mb={5} direction="row" spacing={3} alignItems="center" justifyContent="center">
