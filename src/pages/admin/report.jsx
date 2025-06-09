@@ -1159,8 +1159,8 @@ const ReportPage = () => {
         });
         setDates(days);
         setTotalGGROptions((pre) => ({ ...pre, xaxis: { categories: days, labels: { show: false } } }))
-        setTotalCoinsWageredOptions((pre) => ({ 
-          ...pre, 
+        setTotalCoinsWageredOptions((pre) => ({
+          ...pre,
           xaxis: { categories: days, labels: { show: false } },
           title: {
             text: 'Total Coins Wagered',
@@ -1185,7 +1185,7 @@ const ReportPage = () => {
             const maxDate = sortData
               .filter(item => item.game === game)
               .reduce((max, item) => new Date(item.summary) > new Date(max) ? item.summary : max, '1970-01-01');
-            
+
             const maxDateObj = new Date(maxDate);
             const sevenDaysAgo = new Date(maxDateObj);
             sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6); // 7-day range
@@ -1199,7 +1199,7 @@ const ReportPage = () => {
         );
 
         // Create date labels for the last 7 days based on max date from data
-        const maxDateFromData = sortData.reduce((max, item) => 
+        const maxDateFromData = sortData.reduce((max, item) =>
           new Date(item.summary) > new Date(max) ? item.summary : max, '1970-01-01'
         );
         const maxDateObj = new Date(maxDateFromData);
@@ -1211,9 +1211,9 @@ const ReportPage = () => {
         }
 
         setSevenDayGGR(sevenDayGGRData);
-        setSevenDayGGROptions((pre) => ({ 
-          ...pre, 
-          xaxis: { 
+        setSevenDayGGROptions((pre) => ({
+          ...pre,
+          xaxis: {
             categories: sevenDayLabels,
             labels: { show: true }
           },
@@ -1515,7 +1515,7 @@ const ReportPage = () => {
           const maxDate = sortData
             .filter(item => item.game === game)
             .reduce((max, item) => new Date(item.summary) > new Date(max) ? item.summary : max, '1970-01-01');
-          
+
           const maxDateObj = new Date(maxDate);
           const sevenDaysAgo = new Date(maxDateObj);
           sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6); // 7-day range
@@ -1529,7 +1529,7 @@ const ReportPage = () => {
       );
 
       // Create date labels for the last 7 days based on max date from data
-      const maxDateFromData = sortData.reduce((max, item) => 
+      const maxDateFromData = sortData.reduce((max, item) =>
         new Date(item.summary) > new Date(max) ? item.summary : max, '1970-01-01'
       );
       const maxDateObj = new Date(maxDateFromData);
@@ -1541,9 +1541,9 @@ const ReportPage = () => {
       }
 
       setSevenDayGGR(sevenDayGGRData);
-      setSevenDayGGROptions((pre) => ({ 
-        ...pre, 
-        xaxis: { 
+      setSevenDayGGROptions((pre) => ({
+        ...pre,
+        xaxis: {
           categories: sevenDayLabels,
           labels: { show: true }
         },
@@ -1689,6 +1689,10 @@ const ReportPage = () => {
             <Stack mb={5}>
               <Typography variant="h2" textAlign={'center'}>Total GGR</Typography>
               <ReactApexChart options={totalGGROptions} series={totalGGR} type="line" height={500} />
+            </Stack>
+            <Stack mb={5}>
+              <Typography variant="h2" textAlign={'center'}>7 DAY GGR</Typography>
+              <ReactApexChart options={sevenDayGGROptions} series={sevenDayGGR} type="line" height={500} />
             </Stack>
 
             <Stack mb={5}>
