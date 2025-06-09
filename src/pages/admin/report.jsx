@@ -20,7 +20,7 @@ import { CSVExport, RowEditable } from 'components/third-party/react-table';
 import ScrollX from 'components/ScrollX';
 import IconButton from 'components/@extended/IconButton';
 import { useLocation, Link } from "react-router-dom";
-
+import { useDebouncedCallback } from 'use-debounce'
 // assets
 import { CloseOutlined, EditTwoTone, SendOutlined, PlusOutlined } from '@ant-design/icons';
 import { filter, set } from 'lodash';
@@ -655,9 +655,23 @@ const ReportPage = () => {
 
   const [range, setRange] = useState([1, 37]);
   const [maxRange, setMaxRange] = useState(0);
+
+  // Add debounced version of handleRangeChange
+  const debouncedRangeChange = useDebouncedCallback(
+    (event, newRange) => {
+      setRange(newRange);
+    },
+    300 // 300ms delay
+  );
+
+  // Keep the original handler for immediate UI feedback
   const handleRangeChange = (event, newRange) => {
+    // Update the slider position immediately for smooth UI
     setRange(newRange);
+    // Debounce the actual data processing
+    debouncedRangeChange(event, newRange);
   };
+
   const launchColumns = useMemo(
     () => [
       {
