@@ -638,6 +638,8 @@ const ReportPage = () => {
 
   const [totalGGR, setTotalGGR] = useState([]);
   const [totalGGROptions, setTotalGGROptions] = useState(lineChartOptions);
+  const [totalCoinsWagered, setTotalCoinsWagered] = useState([]);
+  const [totalCoinsWageredOptions, setTotalCoinsWageredOptions] = useState(lineChartOptions);
   const [userOptions, setUserOptions] = useState(lineChartOptions);
   const [userChangesOptions, setUserChangesOptions] = useState(lineChartOptions);
   const [spinDayOptions, setSpinDayOptionsOptions] = useState(lineChartOptions);
@@ -971,7 +973,7 @@ const ReportPage = () => {
         const totalGGRGroupedData = Object.values(
           sortData.reduce((acc, { game, ggrEuro, summary }) => {
             if (!acc[game]) {
-              acc[game] = { name: game, data: [], totalGGR: 0 }; // Added `totalGGR`
+              acc[game] = { name: game, data: [], totalGGR: 0 };
             }
 
             const gameItem = response.data.games.find((g) => g.name === game);
@@ -983,15 +985,244 @@ const ReportPage = () => {
             return acc;
           }, {})
         );
+
+        // Calculate Total Coins Wagered data
+        const totalCoinsWageredData = Object.values(
+          sortData.reduce((acc, { game, betsEuro, summary }) => {
+            if (!acc[game]) {
+              acc[game] = { name: game, data: [], totalCoins: 0 };
+            }
+
+            const gameItem = response.data.games.find((g) => g.name === game);
+
+            acc[game].totalCoins += new Date(gameItem?.launchDate) > new Date(summary) ? 0 : betsEuro;
+            acc[game].data.push(acc[game].totalCoins.toFixed(2));
+
+            return acc;
+          }, {})
+        );
+
         let maxDateLength = 0;
         const filterData = totalGGRGroupedData.map((item) => {
           maxDateLength = Math.max(maxDateLength, item.data.length);
-          return { ...item, data: trimArrayEdges(item.data) }
+          return { ...item, data: trimArrayEdges(item.data) };
         });
-        setMaxRange(maxDateLength)
-        setRange([1, maxDateLength])
-      }
 
+        // Filter Total Coins Wagered data based on selected range
+        const filterCoinsData = totalCoinsWageredData.map((item) => {
+          const startIdx = range[0] - 1;
+          const endIdx = range[1] - 1;
+          item.data = trimArrayEdges(item.data).slice(startIdx, endIdx + 1);
+          return item;
+        });
+
+        setMaxRange(maxDateLength);
+        setRange([1, maxDateLength]);
+        setTotalGGR(filterData);
+        setTotalCoinsWagered(filterCoinsData);
+
+        const uniqueDates = [... new Set(totalGGRDates)];
+        setUniqueDays(uniqueDates)
+        const days = [];
+        for (let index = range[0]; index <= range[1]; index++) {
+          days.push(`Day ${index}`);
+        }
+        // Add SPU and CWPP for table data
+        const reorderTemp = response.data.data?.map((item) => {
+          return {
+            ...item,
+            SPU: item.spins / item.uniquePlayers,
+            CWPP: item.betsEuro / item.uniquePlayers,
+          }
+        })
+
+        setReorderData(reorderTemp)
+
+
+        const dateList = [];
+        for (let i = 0; i < 14; i++) {
+          dateList.push(`Day ${i + 1}`);
+        }
+        setDayLaunch14Options((pre) => ({ ...pre, xaxis: { categories: dateList, labels: { show: false } } }))
+        setDayLaunch14(getNext14Items(totalGGRGroupedData, response.data.games, uniqueDates))
+
+        const usersData = Object.values(
+          sortData.reduce((acc, { game, summary, uniquePlayers }) => {
+            if (!acc[game]) {
+              acc[game] = { name: game, data: [] }; // Added ``
+            }
+            const gameItem = response.data.games.find((g) => g.name === game);
+            if (new Date(gameItem?.launchDate) <= new Date(summary)) {
+              acc[game].data.push(uniquePlayers);
+            }
+            return acc;
+          }, {})
+        );
+        // Apply the selected range to filter the users' data
+        const filterUsersData = usersData.map((item) => {
+          // Calculate the start and end indices based on the range
+          const startIdx = range[0] - 1;  // Adjust for zero indexing
+          const endIdx = range[1] - 1;  // Adjust for zero indexing
+          item.data = item.data.slice(startIdx, endIdx + 1);  // Slice the data based on the selected range
+          return item;
+        });
+        setUsers(filterUsersData)
+        // Function to calculate 5-day rolling sum and percentage change
+        const calculateRollingChange = (data) => {
+          if (data.length < 6) return []; // We need at least 6 days for the first comparison
+
+          let rollingChanges = new Array(5).fill(0); // Fill the first 5 values with 0
+          for (let i = 5; i < data.length; i++) {
+            let firstSum = data.slice(i - 4, i + 1).reduce((sum, num) => sum + num, 0);  // Days 2-6
+            let secondSum = data.slice(i - 5, i).reduce((sum, num) => sum + num, 0);  // Days 1-5
+
+            let percentageChange = (((firstSum - secondSum) / (secondSum || 1)) * 100).toFixed(2);
+
+            rollingChanges.push(percentageChange);
+          }
+
+          return rollingChanges;
+        };
+
+        const usersData1 = Object.values(
+          sortData.reduce((acc, { game, summary, uniquePlayers }) => {
+            if (!acc[game]) {
+              acc[game] = { name: game, data: [] }; // Added ``
+            }
+            const gameItem = response.data.games.find((g) => g.name === game);
+            if (new Date(gameItem?.launchDate) <= new Date(summary)) {
+              acc[game].data.push(uniquePlayers);
+            }
+            return acc;
+          }, {})
+        );
+
+        const usersData2 = usersData1.map((item) => {
+          // Calculate the start and end indices based on the range
+          return { ...item, data: calculateRollingChange(item.data) };
+        });
+
+        const filterUserChangesData = usersData2.map((item) => {
+          // Calculate the start and end indices based on the range
+          const startIdx = range[0] - 1;  // Adjust for zero indexing
+          const endIdx = range[1] - 1;  // Adjust for zero indexing
+          item.data = item.data.slice(startIdx, endIdx + 1);  // Slice the data based on the selected range
+          return { ...item, data: item.data };
+        });
+        setUserChanges(filterUserChangesData)
+
+        const spinsData = Object.values(
+          sortData.reduce((acc, { game, spins, summary }) => {
+            if (!acc[game]) {
+              acc[game] = { name: game, data: [] }; // Added `totalGGR`
+            }
+            const gameItem = response.data.games.find((g) => g.name === game);
+
+            // Check if the summary is within the selected range
+            acc[game].data.push(new Date(gameItem?.launchDate) > new Date(summary) ? 0 : spins);
+            return acc;
+          }, {})
+        );
+
+        // Apply the selected range to filter the spins' data
+        const filterSpinData = spinsData.map((item) => {
+          // Calculate the start and end indices based on the range
+          const startIdx = range[0] - 1;  // Adjust for zero indexing
+          const endIdx = range[1] - 1;  // Adjust for zero indexing
+          item.data = item.data.slice(startIdx, endIdx + 1);  // Slice the data based on the selected range
+          return { ...item, data: trimArrayEdges(item.data) };
+        });
+
+        setSpins(filterSpinData);
+
+
+        const spinsPerUserData = Object.values(
+          sortData.reduce((acc, { game, spins, uniquePlayers, summary }) => {
+            if (!acc[game]) {
+              acc[game] = { name: game, data: [] }; // Added `totalGGR`
+            }
+            const gameItem = response.data.games.find((g) => g.name === game);
+            acc[game].data.push(
+              new Date(gameItem?.launchDate) > new Date(summary) ? 0 : (spins / uniquePlayers).toFixed(2)
+            );
+            return acc;
+          }, {})
+        );
+
+        // Apply the selected range to filter the spins per user data
+        const filterSpinPerUserData = spinsPerUserData.map((item) => {
+          // Calculate the start and end indices based on the range
+          const startIdx = range[0] - 1;  // Adjust for zero indexing
+          const endIdx = range[1] - 1;  // Adjust for zero indexing
+          item.data = item.data.slice(startIdx, endIdx + 1);  // Slice the data based on the selected range
+          return { ...item, data: trimArrayEdges(item.data) };
+        });
+        setDates(days);
+        setTotalGGROptions((pre) => ({ ...pre, xaxis: { categories: days, labels: { show: false } } }))
+        setTotalCoinsWageredOptions((pre) => ({ 
+          ...pre, 
+          xaxis: { categories: days, labels: { show: false } },
+          title: {
+            text: 'Total Coins Wagered',
+            align: 'center'
+          }
+        }));
+        setUserOptions((pre) => ({ ...pre, xaxis: { categories: days, labels: { show: false } } }))
+        setUserChangesOptions((pre) => ({ ...pre, xaxis: { categories: days, labels: { show: false } } }))
+        setSpinDayOptionsOptions((pre) => ({ ...pre, xaxis: { categories: days, labels: { show: false } } }))
+        setSpinPlayerOptions((pre) => ({ ...pre, xaxis: { categories: days, labels: { show: false } } }))
+        setSpinsPerUser(filterSpinPerUserData);
+
+        // Calculate 7 Day GGR data
+        const sevenDayGGRData = Object.values(
+          sortData.reduce((acc, { game, summary, ggrEuro }) => {
+            if (!acc[game]) {
+              acc[game] = { name: game, data: [] };
+            }
+
+            const gameItem = response.data.games.find((g) => g.name === game);
+            // Get the max date from the data for this game
+            const maxDate = sortData
+              .filter(item => item.game === game)
+              .reduce((max, item) => new Date(item.summary) > new Date(max) ? item.summary : max, '1970-01-01');
+            
+            const maxDateObj = new Date(maxDate);
+            const sevenDaysAgo = new Date(maxDateObj);
+            sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6); // 7-day range
+
+            if (new Date(summary) >= sevenDaysAgo && new Date(summary) <= maxDateObj) {
+              acc[game].data.push(ggrEuro);
+            }
+
+            return acc;
+          }, {})
+        );
+
+        // Create date labels for the last 7 days based on max date from data
+        const maxDateFromData = sortData.reduce((max, item) => 
+          new Date(item.summary) > new Date(max) ? item.summary : max, '1970-01-01'
+        );
+        const maxDateObj = new Date(maxDateFromData);
+        const sevenDayLabels = [];
+        for (let i = 6; i >= 0; i--) {
+          const date = new Date(maxDateObj);
+          date.setDate(date.getDate() - i);
+          sevenDayLabels.push(date.toISOString().split('T')[0]);
+        }
+
+        setSevenDayGGR(sevenDayGGRData);
+        setSevenDayGGROptions((pre) => ({ 
+          ...pre, 
+          xaxis: { 
+            categories: sevenDayLabels,
+            labels: { show: true }
+          },
+          title: {
+            text: '7 Day GGR',
+            align: 'center'
+          }
+        }));
+      }
     } catch (error) {
 
     }
@@ -1461,10 +1692,10 @@ const ReportPage = () => {
             </Stack>
 
             <Stack mb={5}>
-              <Typography variant="h2" textAlign={'center'}>7 DAY GGR</Typography>
-              <ReactApexChart options={sevenDayGGROptions} series={sevenDayGGR} type="line" height={500} />
+              <Typography variant="h2" textAlign={'center'}>Total Coins Wagered</Typography>
+              <ReactApexChart options={totalCoinsWageredOptions} series={totalCoinsWagered} type="line" height={500} />
             </Stack>
-            
+
             <Stack mb={5}>
               <Typography variant="h2" textAlign={'center'}>USERS</Typography>
               <ReactApexChart options={userOptions} series={users} type="line" height={500} />
