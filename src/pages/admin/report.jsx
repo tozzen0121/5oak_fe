@@ -324,11 +324,11 @@ function GameCards({ data, games }) {
             winsEuro: winsEuro,
           }
         }
-        const gameData = games.find((g) => g.name === game)
-        acc[game].launchDate = gameData.launchDate
-        acc[game]._id = gameData._id
-        console.log('gameData', gameData)
-        if (new Date(gameData.launchDate) <= new Date(summary)) {
+        const gameItem = games.find((g) => g.name === game)
+        acc[game].launchDate = gameItem.launchDate
+        acc[game]._id = gameItem._id
+        console.log('gameData', gameItem)
+        if (new Date(gameItem.launchDate) <= new Date(summary)) {
           const isMaxDate = new Date(acc[game].maxDate) < new Date(summary)
           acc[game].maxDate = isMaxDate ? summary : acc[game].maxDate
           acc[game].dailyTotalGGR = isMaxDate ? ggrEuro : acc[game].dailyTotalGGR
@@ -642,6 +642,8 @@ const ReportPage = () => {
   const [userChangesOptions, setUserChangesOptions] = useState(lineChartOptions);
   const [spinDayOptions, setSpinDayOptionsOptions] = useState(lineChartOptions);
   const [spinPlayerOptions, setSpinPlayerOptions] = useState(lineChartOptions);
+  const [sevenDayGGROptions, setSevenDayGGROptions] = useState(lineChartOptions);
+  const [sevenDayGGR, setSevenDayGGR] = useState([]);
 
   const [startDate, setStartDate] = useState(new Date().toISOString().split('T')[0])
   const [dayLaunch14, setDayLaunch14] = useState([]);
@@ -1269,6 +1271,56 @@ const ReportPage = () => {
       setSpinDayOptionsOptions((pre) => ({ ...pre, xaxis: { categories: days, labels: { show: false } } }))
       setSpinPlayerOptions((pre) => ({ ...pre, xaxis: { categories: days, labels: { show: false } } }))
       setSpinsPerUser(filterSpinPerUserData);
+
+      // Calculate 7 Day GGR data
+      const sevenDayGGRData = Object.values(
+        sortData.reduce((acc, { game, summary, ggrEuro }) => {
+          if (!acc[game]) {
+            acc[game] = { name: game, data: [] };
+          }
+
+          const gameItem = games.find((g) => g.name === game);
+          // Get the max date from the data for this game
+          const maxDate = sortData
+            .filter(item => item.game === game)
+            .reduce((max, item) => new Date(item.summary) > new Date(max) ? item.summary : max, '1970-01-01');
+          
+          const maxDateObj = new Date(maxDate);
+          const sevenDaysAgo = new Date(maxDateObj);
+          sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6); // 7-day range
+
+          if (new Date(summary) >= sevenDaysAgo && new Date(summary) <= maxDateObj) {
+            acc[game].data.push(ggrEuro);
+          }
+
+          return acc;
+        }, {})
+      );
+
+      // Create date labels for the last 7 days based on max date from data
+      const maxDateFromData = sortData.reduce((max, item) => 
+        new Date(item.summary) > new Date(max) ? item.summary : max, '1970-01-01'
+      );
+      const maxDateObj = new Date(maxDateFromData);
+      const sevenDayLabels = [];
+      for (let i = 6; i >= 0; i--) {
+        const date = new Date(maxDateObj);
+        date.setDate(date.getDate() - i);
+        sevenDayLabels.push(date.toISOString().split('T')[0]);
+      }
+
+      setSevenDayGGR(sevenDayGGRData);
+      setSevenDayGGROptions((pre) => ({ 
+        ...pre, 
+        xaxis: { 
+          categories: sevenDayLabels,
+          labels: { show: true }
+        },
+        title: {
+          text: '7 Day GGR',
+          align: 'center'
+        }
+      }));
     }
   }, [data, startDate, games, range])
 
@@ -1408,6 +1460,11 @@ const ReportPage = () => {
               <ReactApexChart options={totalGGROptions} series={totalGGR} type="line" height={500} />
             </Stack>
 
+            <Stack mb={5}>
+              <Typography variant="h2" textAlign={'center'}>7 DAY GGR</Typography>
+              <ReactApexChart options={sevenDayGGROptions} series={sevenDayGGR} type="line" height={500} />
+            </Stack>
+            
             <Stack mb={5}>
               <Typography variant="h2" textAlign={'center'}>USERS</Typography>
               <ReactApexChart options={userOptions} series={users} type="line" height={500} />
