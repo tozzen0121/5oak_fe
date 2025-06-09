@@ -327,7 +327,6 @@ function GameCards({ data, games }) {
         const gameItem = games.find((g) => g.name === game)
         acc[game].launchDate = gameItem.launchDate
         acc[game]._id = gameItem._id
-        console.log('gameData', gameItem)
         if (new Date(gameItem.launchDate) <= new Date(summary)) {
           const isMaxDate = new Date(acc[game].maxDate) < new Date(summary)
           acc[game].maxDate = isMaxDate ? summary : acc[game].maxDate
@@ -384,7 +383,6 @@ function GameCards({ data, games }) {
         return acc;
       }, {})
     )
-    console.log('gameData', gameData)
     setGamesData(gameData)
 
   }, [data, games])
@@ -985,7 +983,6 @@ const ReportPage = () => {
             return acc;
           }, {})
         );
-
         // Calculate Total Coins Wagered data
         const totalCoinsWageredData = Object.values(
           sortData.reduce((acc, { game, betsEuro, summary }) => {
@@ -997,11 +994,9 @@ const ReportPage = () => {
 
             acc[game].totalCoins += new Date(gameItem?.launchDate) > new Date(summary) ? 0 : betsEuro;
             acc[game].data.push(acc[game].totalCoins.toFixed(2));
-
             return acc;
           }, {})
         );
-
         let maxDateLength = 0;
         const filterData = totalGGRGroupedData.map((item) => {
           maxDateLength = Math.max(maxDateLength, item.data.length);
@@ -1010,16 +1005,14 @@ const ReportPage = () => {
 
         // Filter Total Coins Wagered data based on selected range
         const filterCoinsData = totalCoinsWageredData.map((item) => {
-          const startIdx = range[0] - 1;
-          const endIdx = range[1] - 1;
-          item.data = trimArrayEdges(item.data).slice(startIdx, endIdx + 1);
-          return item;
+          maxDateLength = Math.max(maxDateLength, item.data.length);
+          return { ...item, data: trimArrayEdges(item.data) };
         });
+        setTotalCoinsWagered(filterCoinsData);
 
         setMaxRange(maxDateLength);
         setRange([1, maxDateLength]);
         setTotalGGR(filterData);
-        setTotalCoinsWagered(filterCoinsData);
 
         const uniqueDates = [... new Set(totalGGRDates)];
         setUniqueDays(uniqueDates)
@@ -1135,7 +1128,6 @@ const ReportPage = () => {
 
         setSpins(filterSpinData);
 
-
         const spinsPerUserData = Object.values(
           sortData.reduce((acc, { game, spins, uniquePlayers, summary }) => {
             if (!acc[game]) {
@@ -1159,14 +1151,7 @@ const ReportPage = () => {
         });
         setDates(days);
         setTotalGGROptions((pre) => ({ ...pre, xaxis: { categories: days, labels: { show: false } } }))
-        setTotalCoinsWageredOptions((pre) => ({
-          ...pre,
-          xaxis: { categories: days, labels: { show: false } },
-          title: {
-            text: 'Total Coins Wagered',
-            align: 'center'
-          }
-        }));
+        setTotalCoinsWageredOptions((pre) => ({ ...pre, xaxis: { categories: days, labels: { show: false } } }))
         setUserOptions((pre) => ({ ...pre, xaxis: { categories: days, labels: { show: false } } }))
         setUserChangesOptions((pre) => ({ ...pre, xaxis: { categories: days, labels: { show: false } } }))
         setSpinDayOptionsOptions((pre) => ({ ...pre, xaxis: { categories: days, labels: { show: false } } }))
@@ -1344,6 +1329,21 @@ const ReportPage = () => {
           return acc;
         }, {})
       );
+      const totalCoinsWageredData = Object.values(
+        sortData.reduce((acc, { game, betsEuro, summary }) => {
+          if (!acc[game]) {
+            acc[game] = { name: game, data: [], totalCoins: 0 };
+          }
+
+          const gameItem = games.find((g) => g.name === game);
+
+          acc[game].totalCoins += new Date(gameItem?.launchDate) > new Date(summary) ? 0 : betsEuro;
+          acc[game].data.push(acc[game].totalCoins.toFixed(2));
+          return acc;
+        }, {})
+      );
+      
+
       let maxDateLength = 0;
       const filterData = totalGGRGroupedData.map((item) => {
         maxDateLength = Math.max(maxDateLength, item.data.length);
@@ -1358,7 +1358,21 @@ const ReportPage = () => {
         return item;
       });
 
+      const filterData1 = totalCoinsWageredData.map((item) => {
+        maxDateLength = Math.max(maxDateLength, item.data.length);
+        return { ...item, data: trimArrayEdges(item.data) }
+      });
+
+      // Filter data based on selected range
+      const filteredData2 = filterData1.map((item) => {
+        const startIdx = range[0] - 1;  // Adjust for zero indexing
+        const endIdx = range[1] - 1;  // Adjust for zero indexing
+        item.data = item.data.slice(startIdx, endIdx + 1); // Slice the data based on selected range
+        return item;
+      });
+
       setTotalGGR(filteredData)
+      setTotalCoinsWagered(filteredData2);
       const uniqueDates = [... new Set(totalGGRDates)];
       setUniqueDays(uniqueDates)
       const days = [];
@@ -1497,6 +1511,7 @@ const ReportPage = () => {
       });
       setDates(days);
       setTotalGGROptions((pre) => ({ ...pre, xaxis: { categories: days, labels: { show: false } } }))
+      setTotalCoinsWageredOptions((pre) => ({ ...pre, xaxis: { categories: days, labels: { show: false } } }))
       setUserOptions((pre) => ({ ...pre, xaxis: { categories: days, labels: { show: false } } }))
       setUserChangesOptions((pre) => ({ ...pre, xaxis: { categories: days, labels: { show: false } } }))
       setSpinDayOptionsOptions((pre) => ({ ...pre, xaxis: { categories: days, labels: { show: false } } }))
