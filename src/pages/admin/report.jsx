@@ -997,20 +997,28 @@ const ReportPage = () => {
             return acc;
           }, {})
         );
-        // Calculate Total Coins Wagered data
-        const totalCoinsWageredData = Object.values(
-          sortData.reduce((acc, { game, betsEuro, summary }) => {
-            if (!acc[game]) {
-              acc[game] = { name: game, data: [], totalCoins: 0 };
+
+        // Calculate daily total coins wagered across all games
+        const dailyTotalCoins = sortData.reduce((acc, { summary, betsEuro, game }) => {
+          const gameItem = games.find((g) => g.name === game);
+          if (new Date(gameItem?.launchDate) <= new Date(summary)) {
+            const date = summary.slice(0, 10);
+            if (!acc[date]) {
+              acc[date] = 0;
             }
+            acc[date] += betsEuro;
+          }
+          return acc;
+        }, {});
 
-            const gameItem = response.data.games.find((g) => g.name === game);
+        // Convert to array format for the chart
+        const totalCoinsWageredData = [{
+          name: 'Total Coins Wagered',
+          data: Object.entries(dailyTotalCoins)
+            .sort(([dateA], [dateB]) => new Date(dateA) - new Date(dateB))
+            .map(([_, total]) => Number(total.toFixed(2)))
+        }];
 
-            acc[game].totalCoins += new Date(gameItem?.launchDate) > new Date(summary) ? 0 : betsEuro;
-            acc[game].data.push(acc[game].totalCoins.toFixed(2));
-            return acc;
-          }, {})
-        );
         let maxDateLength = 0;
         const filterData = totalGGRGroupedData.map((item) => {
           maxDateLength = Math.max(maxDateLength, item.data.length);
@@ -1019,14 +1027,16 @@ const ReportPage = () => {
 
         // Filter Total Coins Wagered data based on selected range
         const filterCoinsData = totalCoinsWageredData.map((item) => {
-          maxDateLength = Math.max(maxDateLength, item.data.length);
-          return { ...item, data: trimArrayEdges(item.data) };
+          const startIdx = range[0] - 1;  // Adjust for zero indexing
+          const endIdx = range[1] - 1;  // Adjust for zero indexing
+          item.data = item.data.slice(startIdx, endIdx + 1);
+          return item;
         });
-        setTotalCoinsWagered(filterCoinsData);
 
         setMaxRange(maxDateLength);
         setRange([1, maxDateLength]);
         setTotalGGR(filterData);
+        setTotalCoinsWagered(filterCoinsData);
 
         const uniqueDates = [... new Set(totalGGRDates)];
         setUniqueDays(uniqueDates)
@@ -1165,7 +1175,19 @@ const ReportPage = () => {
         });
         setDates(days);
         setTotalGGROptions((pre) => ({ ...pre, xaxis: { categories: days, labels: { show: false } } }))
-        setTotalCoinsWageredOptions((pre) => ({ ...pre, xaxis: { categories: days, labels: { show: false } } }))
+        setTotalCoinsWageredOptions((pre) => ({ 
+          ...pre, 
+          xaxis: { categories: days, labels: { show: false } },
+          title: {
+            text: 'Daily Total Coins Wagered (All Games)',
+            align: 'center'
+          },
+          yaxis: {
+            title: {
+              text: 'Total Coins'
+            }
+          }
+        }))
         setUserOptions((pre) => ({ ...pre, xaxis: { categories: days, labels: { show: false } } }))
         setUserChangesOptions((pre) => ({ ...pre, xaxis: { categories: days, labels: { show: false } } }))
         setSpinDayOptionsOptions((pre) => ({ ...pre, xaxis: { categories: days, labels: { show: false } } }))
@@ -1343,28 +1365,35 @@ const ReportPage = () => {
           return acc;
         }, {})
       );
-      const totalCoinsWageredData = Object.values(
-        sortData.reduce((acc, { game, betsEuro, summary }) => {
-          if (!acc[game]) {
-            acc[game] = { name: game, data: [], totalCoins: 0 };
+
+      // Calculate daily total coins wagered across all games
+      const dailyTotalCoins = sortData.reduce((acc, { summary, betsEuro, game }) => {
+        const gameItem = games.find((g) => g.name === game);
+        if (new Date(gameItem?.launchDate) <= new Date(summary)) {
+          const date = summary.slice(0, 10);
+          if (!acc[date]) {
+            acc[date] = 0;
           }
+          acc[date] += betsEuro;
+        }
+        return acc;
+      }, {});
 
-          const gameItem = games.find((g) => g.name === game);
-
-          acc[game].totalCoins += new Date(gameItem?.launchDate) > new Date(summary) ? 0 : betsEuro;
-          acc[game].data.push(acc[game].totalCoins.toFixed(2));
-          return acc;
-        }, {})
-      );
-      
+      // Convert to array format for the chart
+      const totalCoinsWageredData = [{
+        name: 'Total Coins Wagered',
+        data: Object.entries(dailyTotalCoins)
+          .sort(([dateA], [dateB]) => new Date(dateA) - new Date(dateB))
+          .map(([_, total]) => Number(total.toFixed(2)))
+      }];
 
       let maxDateLength = 0;
       const filterData = totalGGRGroupedData.map((item) => {
         maxDateLength = Math.max(maxDateLength, item.data.length);
-        return { ...item, data: trimArrayEdges(item.data) }
+        return { ...item, data: trimArrayEdges(item.data) };
       });
 
-      // Filter data based on selected range
+      // Filter Total Coins Wagered data based on selected range
       const filteredData = filterData.map((item) => {
         const startIdx = range[0] - 1;  // Adjust for zero indexing
         const endIdx = range[1] - 1;  // Adjust for zero indexing
@@ -1525,7 +1554,19 @@ const ReportPage = () => {
       });
       setDates(days);
       setTotalGGROptions((pre) => ({ ...pre, xaxis: { categories: days, labels: { show: false } } }))
-      setTotalCoinsWageredOptions((pre) => ({ ...pre, xaxis: { categories: days, labels: { show: false } } }))
+      setTotalCoinsWageredOptions((pre) => ({ 
+        ...pre, 
+        xaxis: { categories: days, labels: { show: false } },
+        title: {
+          text: 'Daily Total Coins Wagered (All Games)',
+          align: 'center'
+        },
+        yaxis: {
+          title: {
+            text: 'Total Coins'
+          }
+        }
+      }))
       setUserOptions((pre) => ({ ...pre, xaxis: { categories: days, labels: { show: false } } }))
       setUserChangesOptions((pre) => ({ ...pre, xaxis: { categories: days, labels: { show: false } } }))
       setSpinDayOptionsOptions((pre) => ({ ...pre, xaxis: { categories: days, labels: { show: false } } }))
@@ -1628,7 +1669,7 @@ const ReportPage = () => {
                     <Typography variant="subtitle1" color="textSecondary">
                       Latest Report Date:
                     </Typography>
-                    <Typography variant="subtitle1" fontWeight="bold">
+                    <Typography variant="h5" sx={{ color: 'red', fontWeight: 'bold' }}>
                       {uploadDate?.split("T")[0]}
                     </Typography>
                   </Stack>
