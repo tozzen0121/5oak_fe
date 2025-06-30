@@ -487,12 +487,12 @@ function GameCards({ data, games }) {
 
   return (
     <Grid item xs={12} lg={12}>
-      <Grid container spacing={2} mb={5}>
-        <Grid item xs={6} lg={3}>
+      <Grid container spacing={{ xs: 1, sm: 2 }} mb={5}>
+        <Grid item xs={12} sm={6} lg={3}>
           <MainCard sx={{ height: "100%", display: "flex", alignItems: "center" }} >
-            <Stack direction="row" spacing={1} alignItems="end" justifyContent="center">
-              <Typography variant="h5" textAlign={'center'}>Lifetime GGR - </Typography>
-              <Typography variant="h6" textAlign={'center'}>
+            <Stack direction={'row'} spacing={1} alignItems="center" justifyContent="center" sx={{ textAlign: 'center' }}>
+              <Typography variant={{ xs: 'h6', sm: 'h5' }} textAlign={'center'} sx={{ fontWeight: 'bold' }}>Lifetime GGR - </Typography>
+              <Typography variant={{ xs: 'h6', sm: 'h6' }} textAlign={'center'}>
                 {
                   Number(gamesData.reduce((acc, game) => acc + game.totalGGR, 0)).toLocaleString()
                 }
@@ -501,11 +501,11 @@ function GameCards({ data, games }) {
           </MainCard>
         </Grid>
 
-        <Grid item xs={6} lg={3}>
+        <Grid item xs={12} sm={6} lg={3}>
           <MainCard sx={{ height: "100%", display: "flex", alignItems: "center" }} >
-            <Stack direction="row" spacing={1} alignItems="end" justifyContent="center">
-              <Typography variant="h5" textAlign={'center'}>Daily Total GGR -</Typography>
-              <Typography variant="h6" textAlign={'center'}>
+            <Stack direction={'row'} spacing={1} alignItems="center" justifyContent="center" sx={{ textAlign: 'center' }}>
+              <Typography variant={{ xs: 'h6', sm: 'h5' }} textAlign={'center'} sx={{ fontWeight: 'bold' }}>Daily Total GGR -</Typography>
+              <Typography variant={{ xs: 'h6', sm: 'h6' }} textAlign={'center'}>
                 {
                   Number(gamesData.reduce((acc, game) => acc + game.dailyTotalGGR, 0)).toLocaleString()
                 }
@@ -514,11 +514,11 @@ function GameCards({ data, games }) {
           </MainCard>
         </Grid>
 
-        <Grid item xs={6} lg={3}>
+        <Grid item xs={12} sm={6} lg={3}>
           <MainCard sx={{ height: "100%", display: "flex", alignItems: "center" }} >
-            <Stack direction="row" spacing={1} alignItems="end" justifyContent="center">
-              <Typography variant="h5" textAlign={'center'}>7 Day Average GGR -</Typography>
-              <Typography variant="h6" textAlign={'center'}>
+            <Stack direction={'row'} spacing={1} alignItems="center" justifyContent="center" sx={{ textAlign: 'center' }}>
+              <Typography variant={{ xs: 'h6', sm: 'h5' }} textAlign={'center'} sx={{ fontWeight: 'bold' }}>7 Day Average GGR -</Typography>
+              <Typography variant={{ xs: 'h6', sm: 'h6' }} textAlign={'center'}>
                 {
                   Number(gamesData.reduce((acc, game) => acc + game.weekAverage, 0)).toLocaleString()
                 }
@@ -527,11 +527,11 @@ function GameCards({ data, games }) {
           </MainCard>
         </Grid>
 
-        <Grid item xs={6} lg={3}>
+        <Grid item xs={12} sm={6} lg={3}>
           <MainCard sx={{ height: "100%", display: "flex", alignItems: "center" }} >
-            <Stack direction="row" spacing={1} alignItems="end" justifyContent="center">
-              <Typography variant="h5" textAlign={'center'}>7 Day Change -</Typography>
-              <Typography variant="h6" textAlign={'center'}>
+            <Stack direction={'row'} spacing={1} alignItems="center" justifyContent="center" sx={{ textAlign: 'center' }}>
+              <Typography variant={{ xs: 'h6', sm: 'h5' }} textAlign={'center'} sx={{ fontWeight: 'bold' }}>7 Day Change -</Typography>
+              <Typography variant={{ xs: 'h6', sm: 'h6' }} textAlign={'center'}>
                 {
                   ((gamesData.reduce((acc, game) => acc + game.weekSum1, 0) -
                     gamesData.reduce((acc, game) => acc + game.weekSum2, 0)) /
@@ -542,11 +542,11 @@ function GameCards({ data, games }) {
           </MainCard>
         </Grid>
 
-        <Grid item xs={6} lg={3}>
+        <Grid item xs={12} sm={6} lg={3}>
           <MainCard sx={{ height: "100%", display: "flex", alignItems: "center" }} >
-            <Stack direction="row" spacing={1} alignItems="end" justifyContent="center">
-              <Typography variant="h5" textAlign={'center'}>{`Projected GGR ${years.reduce((max, num) => Math.max(max, (num)), -Infinity)} -`}</Typography>
-              <Typography variant="h6" textAlign={'center'}>
+            <Stack direction={'row'} spacing={1} alignItems="center" justifyContent="center" sx={{ textAlign: 'center' }}>
+              <Typography variant={{ xs: 'h6', sm: 'h5' }} textAlign={'center'} sx={{ fontWeight: 'bold' }}>{`Projected GGR ${years.reduce((max, num) => Math.max(max, (num)), -Infinity)} -`}</Typography>
+              <Typography variant={{ xs: 'h6', sm: 'h6' }} textAlign={'center'}>
                 {
                   Number(gamesData.reduce((acc, game) => acc + game.projectedTotalGGR, 0)).toLocaleString()
                 }
@@ -555,13 +555,13 @@ function GameCards({ data, games }) {
           </MainCard>
         </Grid>
 
-        <Grid item xs={6} lg={3}>
+        <Grid item xs={12} sm={6} lg={3}>
           <MainCard sx={{ height: "100%", display: "flex", alignItems: "center" }}>
             {
               quaters?.map((y, index) =>
-                <Stack direction="row" spacing={1} alignItems="end" justifyContent="start" key={index} >
-                  <Typography variant="h5" textAlign={'center'}>{`Total GGR ${y} - `}</Typography>
-                  <Typography variant="h6" textAlign={'center'}>
+                <Stack direction={'row'} spacing={1} alignItems="center" justifyContent="start" key={index} sx={{ textAlign: 'center' }}>
+                  <Typography variant={{ xs: 'h6', sm: 'h5' }} textAlign={'center'} sx={{ fontWeight: 'bold' }}>{`Total GGR ${y} - `}</Typography>
+                  <Typography variant={{ xs: 'h6', sm: 'h6' }} textAlign={'center'}>
                     {
                       Number(gamesData.reduce((acc, game) => acc + (game[`totalGGR_${y}`] || 0), 0)).toLocaleString()
                     }
@@ -573,12 +573,12 @@ function GameCards({ data, games }) {
         </Grid>
 
       </Grid>
-      <Stack mb={5} spacing={3}>
-        <Typography variant="h2" textAlign={'center'}>Games Data</Typography>
+      <Stack mb={5} spacing={{ xs: 2, sm: 3 }}>
+        <Typography variant={{ xs: 'h4', sm: 'h3', md: 'h2' }} textAlign={'center'}>Games Data</Typography>
         <ReactTable {...{ data: gamesData, columns: gamesColumns }} />
       </Stack>
-      <Stack mb={5} spacing={3}>
-        <Typography variant="h2" textAlign={'center'}>TOTAL GGR - QUARTER</Typography>
+      <Stack mb={5} spacing={{ xs: 2, sm: 3 }}>
+        <Typography variant={{ xs: 'h4', sm: 'h3', md: 'h2' }} textAlign={'center'}>TOTAL GGR - QUARTER</Typography>
         <ReactTable {...{ data: tableData, columns: totalRevenueTableColumn, setData: () => { } }} />
       </Stack>
     </Grid>
@@ -1651,70 +1651,74 @@ const ReportPage = () => {
         {
           !open &&
           <Grid item xs={12} lg={12}>
-            <Stack mb={3} spacing={1} display={"flex"} flexDirection={"row"} alignItems={"center"} gap={2} justifyContent={"space-between"}>
+            <Stack mb={3} spacing={1} display={"flex"} flexDirection={"row"} alignItems={"center"} gap={2} justifyContent={"space-between"} sx={{ flexDirection: { xs: 'column', sm: 'row' }, alignItems: { xs: 'stretch', sm: 'center' } }}>
               <Grid item>
                 <Stack spacing={1}>
-                  <Stack direction="row" spacing={1} alignItems="center">
+                  <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems="center">
                     <label htmlFor="contained-button-file">
                       <Input accept=".xls,.xlsx" id="contained-button-file" type="file" onChange={handleFileChange} />
                       <LoadingButton loading={loading} variant="contained" component="span">
                         Upload Excel
                       </LoadingButton>
                     </label>
-                    <LoadingButton sx={{ marginLeft: '10px' }} loading={downloading} variant="contained" component="span" onClick={handleDownload}>
+                    <LoadingButton sx={{ marginLeft: { xs: 0, sm: '10px' }, marginTop: { xs: 1, sm: 0 } }} loading={downloading} variant="contained" component="span" onClick={handleDownload}>
                       Download Excel
                     </LoadingButton>
                   </Stack>
-                  <Stack direction="row" spacing={1} alignItems="center">
-                    <Typography variant="subtitle1" color="textSecondary">
+                  <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems="center">
+                    <Typography variant={{ xs: 'subtitle2', sm: 'subtitle1' }} color="textSecondary">
                       Latest Report Date:
                     </Typography>
-                    <Typography variant="h5" sx={{ color: 'red', fontWeight: 'bold' }}>
+                    <Typography variant={{ xs: 'h6', sm: 'h5' }} sx={{ color: 'red', fontWeight: 'bold' }}>
                       {uploadDate?.split("T")[0]}
                     </Typography>
                   </Stack>
                 </Stack>
               </Grid>
 
-              <Grid sx={{ marginTop: '0px !important' }} gap={2} display={"flex"} flexDirection={"row"} alignItems={"center"}>
-                <Typography variant="h5" textAlign={'right'}>LAUNCH</Typography>
-                <Link Link to={onlyPassword ? `/admin/report-type/users/launch` : `/report-type/users/launch`}>
-                  <Button loading={loading} variant="contained" component="span">Users</Button>
-                </Link>
-                <Link to={onlyPassword ? `/admin/report-type/totalGGR/launch` : `/report-type/totalGGR/launch`}>
-                  <Button loading={loading} variant="contained" component="span">Total GGR</Button>
-                </Link>
-                <Link to={onlyPassword ? `/admin/report-type/spinsPerUser/launch` : `/report-type/spinsPerUser/launch`}>
-                  <Button loading={loading} variant="contained" component="span">Spins Per User</Button>
-                </Link>
-                <Link to={onlyPassword ? `/admin/report-type/totalCoins/launch` : `/report-type/totalCoins/launch`}>
-                  <Button loading={loading} variant="contained" component="span">Total Coins</Button>
-                </Link>
-                <Link to={onlyPassword ? `/admin/report-type/cwpp/launch` : `/report-type/cwpp/launch`}>
-                  <Button loading={loading} variant="contained" component="span">CWPP</Button>
-                </Link>
+              <Grid gap={2} display={"flex"} flexDirection={"row"} alignItems={"center"} sx={{ flexDirection: { xs: 'column', sm: 'row' }, gap: { xs: 1, sm: 2 } }}>
+                <Typography variant={{ xs: 'h6', sm: 'h5' }} textAlign={'center'}>LAUNCH</Typography>
+                <Stack direction="row" spacing={1} flexWrap="wrap" justifyContent="center">
+                  <Link Link to={onlyPassword ? `/admin/report-type/users/launch` : `/report-type/users/launch`}>
+                    <Button loading={loading} variant="contained" component="span" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' }, padding: { xs: '6px 12px', sm: '8px 16px' } }}>Users</Button>
+                  </Link>
+                  <Link to={onlyPassword ? `/admin/report-type/totalGGR/launch` : `/report-type/totalGGR/launch`}>
+                    <Button loading={loading} variant="contained" component="span" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' }, padding: { xs: '6px 12px', sm: '8px 16px' } }}>Total GGR</Button>
+                  </Link>
+                  <Link to={onlyPassword ? `/admin/report-type/spinsPerUser/launch` : `/report-type/spinsPerUser/launch`}>
+                    <Button loading={loading} variant="contained" component="span" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' }, padding: { xs: '6px 12px', sm: '8px 16px' } }}>Spins Per User</Button>
+                  </Link>
+                  <Link to={onlyPassword ? `/admin/report-type/totalCoins/launch` : `/report-type/totalCoins/launch`}>
+                    <Button loading={loading} variant="contained" component="span" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' }, padding: { xs: '6px 12px', sm: '8px 16px' } }}>Total Coins</Button>
+                  </Link>
+                  <Link to={onlyPassword ? `/admin/report-type/cwpp/launch` : `/report-type/cwpp/launch`}>
+                    <Button loading={loading} variant="contained" component="span" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' }, padding: { xs: '6px 12px', sm: '8px 16px' } }}>CWPP</Button>
+                  </Link>
+                </Stack>
               </Grid>
             </Stack>
 
-            <Stack mb={3} spacing={1} display={"flex"} flexDirection={"row"} alignItems={"center"} gap={2} justifyContent={"end"}>
+            <Stack mb={3} spacing={1} display={"flex"} flexDirection={"row"} alignItems={"center"} gap={2} justifyContent={"end"} sx={{ flexDirection: { xs: 'column', sm: 'row' }, alignItems: { xs: 'stretch', sm: 'center' } }}>
 
-              <Grid sx={{ marginTop: '0px !important' }} gap={2} display={"flex"} flexDirection={"row"} alignItems={"center"}>
-                <Typography variant="h5" textAlign={'right'}>EXCLUSIVE</Typography>
-                <Link to={onlyPassword ? `/admin/report-type/users/exclusive` : `/report-type/users/exclusive`}>
-                  <Button loading={loading} variant="contained" component="span">Users</Button>
-                </Link>
-                <Link to={onlyPassword ? `/admin/report-type/totalGGR/exclusive` : `/report-type/totalGGR/exclusive`}>
-                  <Button loading={loading} variant="contained" component="span">Total GGR</Button>
-                </Link>
-                <Link to={onlyPassword ? `/admin/report-type/spinsPerUser/exclusive` : `/report-type/spinsPerUser/exclusive`}>
-                  <Button loading={loading} variant="contained" component="span">Spins Per User</Button>
-                </Link>
-                <Link to={onlyPassword ? `/admin/report-type/totalCoins/exclusive` : `/report-type/totalCoins/exclusive`}>
-                  <Button loading={loading} variant="contained" component="span">Total Coins</Button>
-                </Link>
-                <Link to={onlyPassword ? `/admin/report-type/cwpp/exclusive` : `/report-type/cwpp/exclusive`}>
-                  <Button loading={loading} variant="contained" component="span">CWPP</Button>
-                </Link>
+              <Grid gap={2} display={"flex"} flexDirection={"row"} alignItems={"center"} sx={{ flexDirection: { xs: 'column', sm: 'row' }, gap: { xs: 1, sm: 2 } }}>
+                <Typography variant={{ xs: 'h6', sm: 'h5' }} textAlign={'center'}>EXCLUSIVE</Typography>
+                <Stack direction="row" spacing={1} flexWrap="wrap" justifyContent="center">
+                  <Link to={onlyPassword ? `/admin/report-type/users/exclusive` : `/report-type/users/exclusive`}>
+                    <Button loading={loading} variant="contained" component="span" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' }, padding: { xs: '6px 12px', sm: '8px 16px' } }}>Users</Button>
+                  </Link>
+                  <Link to={onlyPassword ? `/admin/report-type/totalGGR/exclusive` : `/report-type/totalGGR/exclusive`}>
+                    <Button loading={loading} variant="contained" component="span" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' }, padding: { xs: '6px 12px', sm: '8px 16px' } }}>Total GGR</Button>
+                  </Link>
+                  <Link to={onlyPassword ? `/admin/report-type/spinsPerUser/exclusive` : `/report-type/spinsPerUser/exclusive`}>
+                    <Button loading={loading} variant="contained" component="span" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' }, padding: { xs: '6px 12px', sm: '8px 16px' } }}>Spins Per User</Button>
+                  </Link>
+                  <Link to={onlyPassword ? `/admin/report-type/totalCoins/exclusive` : `/report-type/totalCoins/exclusive`}>
+                    <Button loading={loading} variant="contained" component="span" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' }, padding: { xs: '6px 12px', sm: '8px 16px' } }}>Total Coins</Button>
+                  </Link>
+                  <Link to={onlyPassword ? `/admin/report-type/cwpp/exclusive` : `/report-type/cwpp/exclusive`}>
+                    <Button loading={loading} variant="contained" component="span" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' }, padding: { xs: '6px 12px', sm: '8px 16px' } }}>CWPP</Button>
+                  </Link>
+                </Stack>
               </Grid>
             </Stack>
 
@@ -1722,28 +1726,28 @@ const ReportPage = () => {
               <GameCards data={data} games={games} />
             </Stack>
 
-            <Stack mb={5} spacing={3}>
-              <Typography variant="h2" textAlign={'center'}>Launch Information</Typography>
+            <Stack mb={5} spacing={{ xs: 2, sm: 3 }}>
+              <Typography variant={{ xs: 'h4', sm: 'h3', md: 'h2' }} textAlign={'center'}>Launch Information</Typography>
               <ReactTable {...{ data: games, columns: launchColumns, setData: setGames }} />
             </Stack>
 
-            <Stack mb={5} spacing={3}>
-              <Typography variant="h2" textAlign={'center'}>TOTAL REVENUE</Typography>
+            <Stack mb={5} spacing={{ xs: 2, sm: 3 }}>
+              <Typography variant={{ xs: 'h4', sm: 'h3', md: 'h2' }} textAlign={'center'}>TOTAL REVENUE</Typography>
               <ReactTable {...{ data: totalGGR, columns: totalRevenueColumns, setData: setGames }} />
             </Stack>
 
-            <Stack mb={5} spacing={3}>
-              <Typography variant="h2" textAlign={'center'}>7 Day Averages</Typography>
+            <Stack mb={5} spacing={{ xs: 2, sm: 3 }}>
+              <Typography variant={{ xs: 'h4', sm: 'h3', md: 'h2' }} textAlign={'center'}>7 Day Averages</Typography>
               <ReactTable {...{ data: weekAveragesData, columns: weekAverages, setData: setGames }} />
             </Stack>
 
-            <Stack mb={5} spacing={3}>
-              <Typography variant="h2" textAlign={'center'}>7 Day Change (%) </Typography>
+            <Stack mb={5} spacing={{ xs: 2, sm: 3 }}>
+              <Typography variant={{ xs: 'h4', sm: 'h3', md: 'h2' }} textAlign={'center'}>7 Day Change (%) </Typography>
               <ReactTable {...{ data: weekChangeData, columns: weekChanges, setData: setGames }} />
             </Stack>
 
-            <Stack mb={5} direction="row" spacing={3} alignItems="center" justifyContent="center">
-              <Typography variant="h2">Time Period</Typography>
+            <Stack mb={5} direction={{ xs: 'column', sm: 'row' }} spacing={{ xs: 2, sm: 3 }} alignItems="center" justifyContent="center">
+              <Typography variant={{ xs: 'h4', sm: 'h3', md: 'h2' }}>Time Period</Typography>
               <Slider
                 getAriaLabel={() => 'Temperature range'}
                 value={range}
@@ -1752,46 +1756,46 @@ const ReportPage = () => {
                 onChange={handleRangeChange}
                 valueLabelDisplay="auto"
                 valueLabelFormat={(value) => `Day ${value}`}
-                sx={{ width: '40%' }}
+                sx={{ width: { xs: '90%', sm: '60%', md: '40%' } }}
               />
             </Stack>
 
-            <Stack mb={5}>
-              <Typography variant="h2" textAlign={'center'}>Total GGR</Typography>
+            <Stack mb={5} spacing={{ xs: 2, sm: 3 }}>
+              <Typography variant={{ xs: 'h4', sm: 'h3', md: 'h2' }} textAlign={'center'}>Total GGR</Typography>
               <ReactApexChart options={totalGGROptions} series={totalGGR} type="line" height={500} />
             </Stack>
-            <Stack mb={5}>
-              <Typography variant="h2" textAlign={'center'}>7 DAY GGR</Typography>
+            <Stack mb={5} spacing={{ xs: 2, sm: 3 }}>
+              <Typography variant={{ xs: 'h4', sm: 'h3', md: 'h2' }} textAlign={'center'}>7 DAY GGR</Typography>
               <ReactApexChart options={sevenDayGGROptions} series={sevenDayGGR} type="line" height={500} />
             </Stack>
 
-            <Stack mb={5}>
-              <Typography variant="h2" textAlign={'center'}>Total Coins Wagered</Typography>
+            <Stack mb={5} spacing={{ xs: 2, sm: 3 }}>
+              <Typography variant={{ xs: 'h4', sm: 'h3', md: 'h2' }} textAlign={'center'}>Total Coins Wagered</Typography>
               <ReactApexChart options={totalCoinsWageredOptions} series={totalCoinsWagered} type="line" height={500} />
             </Stack>
 
-            <Stack mb={5}>
-              <Typography variant="h2" textAlign={'center'}>USERS</Typography>
+            <Stack mb={5} spacing={{ xs: 2, sm: 3 }}>
+              <Typography variant={{ xs: 'h4', sm: 'h3', md: 'h2' }} textAlign={'center'}>USERS</Typography>
               <ReactApexChart options={userOptions} series={users} type="line" height={500} />
             </Stack>
 
-            <Stack mb={5}>
-              <Typography variant="h2" textAlign={'center'}>USER 5 Day Change (%)</Typography>
+            <Stack mb={5} spacing={{ xs: 2, sm: 3 }}>
+              <Typography variant={{ xs: 'h4', sm: 'h3', md: 'h2' }} textAlign={'center'}>USER 5 Day Change (%)</Typography>
               <ReactApexChart options={userChangesOptions} series={userChanges} type="line" height={500} />
             </Stack>
 
-            <Stack mb={5}>
-              <Typography variant="h2" textAlign={'center'}>SPINS PER DAY</Typography>
+            <Stack mb={5} spacing={{ xs: 2, sm: 3 }}>
+              <Typography variant={{ xs: 'h4', sm: 'h3', md: 'h2' }} textAlign={'center'}>SPINS PER DAY</Typography>
               <ReactApexChart options={spinDayOptions} series={spins} type="line" height={500} />
             </Stack>
 
-            <Stack mb={5}>
-              <Typography variant="h2" textAlign={'center'}>SPINS PER PLAYER</Typography>
+            <Stack mb={5} spacing={{ xs: 2, sm: 3 }}>
+              <Typography variant={{ xs: 'h4', sm: 'h3', md: 'h2' }} textAlign={'center'}>SPINS PER PLAYER</Typography>
               <ReactApexChart options={spinPlayerOptions} series={spinsPerUser} type="line" height={500} />
             </Stack>
 
-            <Stack>
-              <Typography variant="h2" textAlign={'center'}>14 DAY LAUNCH</Typography>
+            <Stack spacing={{ xs: 2, sm: 3 }}>
+              <Typography variant={{ xs: 'h4', sm: 'h3', md: 'h2' }} textAlign={'center'}>14 DAY LAUNCH</Typography>
               <ReactApexChart options={dayLaunch14Options} series={dayLaunch14} type="line" height={500} />
             </Stack>
           </Grid>
