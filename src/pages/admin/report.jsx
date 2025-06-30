@@ -327,23 +327,26 @@ function GameCards({ data, games }) {
         const gameItem = games.find((g) => g.name === game)
         acc[game].launchDate = gameItem.launchDate
         acc[game]._id = gameItem._id
+        acc[game].totalGGR += ggrEuro
+
+        const year = summary.split("-")[0]
+        if (!acc[game].years[year]) acc[game].years[year] = 0
+        acc[game].years[year] += ggrEuro
+        if (!acc[game][`totalGGR_${year}`]) acc[game][`totalGGR_${year}`] = 0;
+        acc[game][`totalGGR_${year}`] += ggrEuro
+
+        const currentQuater = getQuarter(new Date(summary));
+        const yearQuater = `${year}-Q${currentQuater}`
+        if (!acc[game][`totalGGR_${yearQuater}`]) acc[game][`totalGGR_${yearQuater}`] = 0;
+        acc[game][`totalGGR_${yearQuater}`] += ggrEuro
+
+        acc[game].projectedTotalGGR = acc[game].totalGGR + acc[game].weekAverage * acc[game].remainDays
+
         if (new Date(gameItem.launchDate) <= new Date(summary)) {
           const isMaxDate = new Date(acc[game].maxDate) < new Date(summary)
           acc[game].maxDate = isMaxDate ? summary : acc[game].maxDate
           acc[game].dailyTotalGGR = isMaxDate ? ggrEuro : acc[game].dailyTotalGGR
-          acc[game].totalGGR += ggrEuro
 
-          const year = summary.split("-")[0]
-          if (!acc[game].years[year]) acc[game].years[year] = 0
-          acc[game].years[year] += ggrEuro
-          if (!acc[game][`totalGGR_${year}`]) acc[game][`totalGGR_${year}`] = 0;
-          acc[game][`totalGGR_${year}`] += ggrEuro
-
-          const currentQuater = getQuarter(new Date(summary));
-          const yearQuater = `${year}-Q${currentQuater}`
-
-          if (!acc[game][`totalGGR_${yearQuater}`]) acc[game][`totalGGR_${yearQuater}`] = 0;
-          acc[game][`totalGGR_${yearQuater}`] += ggrEuro
           const today = new Date(acc[game].maxDate);
           const endOfYear = new Date(today.getFullYear(), 11, 31);
           acc[game].remainDays = Math.ceil((endOfYear - today) / (1000 * 60 * 60 * 24));
@@ -376,7 +379,6 @@ function GameCards({ data, games }) {
           acc[game].weekAverage = acc[game].latestWeekGGR.reduce((a, b) => a + b, 0) / acc[game].latestWeekGGR.length;
           acc[game].weekChange = (acc[game].latestWeekGGR.reduce((a, b) => a + b, 0) - acc[game].secLatestWeekGGR.reduce((a, b) => a + b, 0)) / acc[game].secLatestWeekGGR.reduce((a, b) => a + b, 0) * 100;
           acc[game].weekChangeColor = <span style={{ color: acc[game].weekChange > 0 ? "green" : "red" }}>{`${Number(acc[game].weekChange.toFixed(2)).toLocaleString()} %`}</span>
-          acc[game].projectedTotalGGR = acc[game].totalGGR + acc[game].weekAverage * acc[game].remainDays
           acc[game].LifeTimePayout = (acc[game].winsEuro / acc[game].betsEuro).toFixed(2);
         }
 
