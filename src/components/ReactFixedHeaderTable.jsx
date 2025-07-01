@@ -8,7 +8,9 @@ import {
   TableContainer, 
   TableHead, 
   TableRow, 
-  Paper 
+  Paper,
+  useTheme,
+  useMediaQuery
 } from '@mui/material';
 import { useReactTable, getCoreRowModel, flexRender } from '@tanstack/react-table';
 import { TableVirtuoso } from 'react-virtuoso';
@@ -24,6 +26,15 @@ export function ReactFixedHeaderTable({
   onSave,
   meta = {}
 }) {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const isSmallMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
+  // Debug logging to check if breakpoints are working
+  React.useEffect(() => {
+    console.log('Mobile breakpoints:', { isMobile, isSmallMobile });
+  }, [isMobile, isSmallMobile]);
+
   const [originalData, setOriginalData] = React.useState(() => [...data]);
   const [selectedRow, setSelectedRow] = React.useState({});
 
@@ -74,7 +85,14 @@ export function ReactFixedHeaderTable({
       <TableContainer component={Paper} {...props} ref={ref} />
     )),
     Table: (props) => (
-      <Table {...props} sx={{ borderCollapse: 'separate', tableLayout: 'fixed' }} />
+      <Table 
+        {...props} 
+        sx={{ 
+          borderCollapse: 'separate', 
+          tableLayout: isMobile ? 'auto' : 'fixed',
+          minWidth: isMobile ? '100%' : 'auto'
+        }} 
+      />
     ),
     TableHead: forwardRef((props, ref) => <TableHead {...props} ref={ref} />),
     TableRow,
@@ -93,8 +111,12 @@ export function ReactFixedHeaderTable({
               sx={{ 
                 backgroundColor: '#f0f0f0',
                 width: header.column.columnDef.meta?.width || 'auto',
-                padding: '8px 16px',
-                fontWeight: 'bold'
+                padding: isMobile ? (isSmallMobile ? '4px 6px' : '6px 8px') : '8px 16px',
+                fontWeight: 'bold',
+                fontSize: isMobile ? (isSmallMobile ? '0.7rem' : '0.75rem') : '0.875rem',
+                minWidth: isMobile ? '80px' : 'auto',
+                textAlign: isMobile ? 'center' : 'left',
+                whiteSpace: isMobile ? 'nowrap' : 'normal'
               }}
             >
               {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
@@ -114,7 +136,11 @@ export function ReactFixedHeaderTable({
             {...cell.column.columnDef.meta}
             sx={{ 
               width: cell.column.columnDef.meta?.width || 'auto',
-              padding: '8px 16px'
+              padding: isMobile ? (isSmallMobile ? '4px 6px' : '6px 8px') : '8px 16px',
+              fontSize: isMobile ? (isSmallMobile ? '0.7rem' : '0.75rem') : '0.875rem',
+              minWidth: isMobile ? '80px' : 'auto',
+              textAlign: isMobile ? 'center' : 'left',
+              whiteSpace: isMobile ? 'nowrap' : 'normal'
             }}
           >
             {flexRender(cell.column.columnDef.cell, cell.getContext())}
@@ -127,7 +153,17 @@ export function ReactFixedHeaderTable({
   return (
     <MainCard content={false}>
       <ScrollX>
-        <Paper style={{ height, width: '100%' }}>
+        <Paper style={{ 
+          height: isMobile ? (height === '80vh' ? '50vh' : height) : height, 
+          width: '100%',
+          maxWidth: '100%',
+          overflow: 'hidden'
+        }}
+        sx={{
+          borderRadius: isMobile ? '8px' : '12px',
+          boxShadow: isMobile ? 1 : 2
+        }}
+        >
           <TableVirtuoso
             data={table.getRowModel().rows}
             components={VirtuosoTableComponents}
