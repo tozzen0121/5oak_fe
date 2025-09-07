@@ -258,6 +258,7 @@ function GameCards({ data, games }) {
   const [years, setYears] = useState([]);
   const [quaters, setQuater] = useState([]);
   const [highestDailyGGR, setHighestDailyGGR] = useState({ value: 0, date: '' });
+  const [comparisonData, setComparisonData] = useState([]);
 
   useEffect(() => {
 
@@ -434,6 +435,35 @@ function GameCards({ data, games }) {
     const highestDailyGGRDate = Object.keys(dailyGGRTotals).find(date => dailyGGRTotals[date] === highestDailyGGR);
     setHighestDailyGGR({ value: highestDailyGGR, date: highestDailyGGRDate });
 
+    // Calculate today vs previous day comparison data
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    
+    const todayStr = today.toISOString().split('T')[0];
+    const yesterdayStr = yesterday.toISOString().split('T')[0];
+    
+    const comparisonData = games.map(game => {
+      const todayData = data.find(d => d.game === game.name && d.summary.split('T')[0] === todayStr);
+      const yesterdayData = data.find(d => d.game === game.name && d.summary.split('T')[0] === yesterdayStr);
+      
+      return {
+        gameName: game.name,
+        totalUsersToday: todayData?.uniquePlayers || 0,
+        totalUsersPrevious: yesterdayData?.uniquePlayers || 0,
+        cwppToday: todayData ? (todayData.betsEuro / todayData.uniquePlayers) : 0,
+        cwppPrevious: yesterdayData ? (yesterdayData.betsEuro / yesterdayData.uniquePlayers) : 0,
+        spuToday: todayData ? (todayData.spins / todayData.uniquePlayers) : 0,
+        spuPrevious: yesterdayData ? (yesterdayData.spins / yesterdayData.uniquePlayers) : 0,
+        aveBetToday: todayData?.avgBet || 0,
+        aveBetPrevious: yesterdayData?.avgBet || 0,
+        totalCoinsToday: todayData?.betsEuro || 0,
+        totalCoinsPrevious: yesterdayData?.betsEuro || 0
+      };
+    });
+    
+    setComparisonData(comparisonData);
+
   }, [data, games])
   const gamesColumns = useMemo(
     () => [
@@ -556,6 +586,153 @@ function GameCards({ data, games }) {
     ];
   }, [games]);
 
+  const comparisonColumns = useMemo(
+    () => [
+      {
+        header: 'Game Name',
+        accessorKey: 'gameName',
+        dataType: 'text',
+        cell: ({ getValue }) => getValue()
+      },
+      {
+        header: (
+          <div style={{ textAlign: 'center', border: '1px solid #d0d0d0', padding: '8px' }}>
+            <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>Total Users</div>
+            <div style={{ display: 'flex', fontSize: '0.8em' }}>
+              <div style={{ flex: 1, textAlign: 'center', borderRight: '1px solid #d0d0d0', paddingRight: '8px' }}>
+                <span style={{ fontWeight: 'bold', color: '#1976d2' }}>Today</span>
+              </div>
+              <div style={{ flex: 1, textAlign: 'center', paddingLeft: '8px' }}>
+                <span style={{ fontWeight: 'bold', color: '#666' }}>Previous</span>
+              </div>
+            </div>
+          </div>
+        ),
+        accessorKey: 'totalUsers',
+        dataType: 'text',
+        cell: ({ row }) => (
+          <div style={{ display: 'flex', justifyContent: 'center', border: '1px solid #d0d0d0', padding: '8px' }}>
+            <div style={{ flex: 1, textAlign: 'center', borderRight: '1px solid #d0d0d0', paddingRight: '8px' }}>
+              <span style={{ fontWeight: 'bold', color: '#1976d2' }}>{Number(row.original.totalUsersToday).toLocaleString()}</span>
+            </div>
+            <div style={{ flex: 1, textAlign: 'center', paddingLeft: '8px' }}>
+              <span style={{ color: '#666' }}>{Number(row.original.totalUsersPrevious).toLocaleString()}</span>
+            </div>
+          </div>
+        )
+      },
+      {
+        header: (
+          <div style={{ textAlign: 'center', border: '1px solid #d0d0d0', padding: '8px' }}>
+            <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>CWPP</div>
+            <div style={{ display: 'flex', fontSize: '0.8em' }}>
+              <div style={{ flex: 1, textAlign: 'center', borderRight: '1px solid #d0d0d0', paddingRight: '8px' }}>
+                <span style={{ fontWeight: 'bold', color: '#1976d2' }}>Today</span>
+              </div>
+              <div style={{ flex: 1, textAlign: 'center', paddingLeft: '8px' }}>
+                <span style={{ fontWeight: 'bold', color: '#666' }}>Previous</span>
+              </div>
+            </div>
+          </div>
+        ),
+        accessorKey: 'cwpp',
+        dataType: 'text',
+        cell: ({ row }) => (
+          <div style={{ display: 'flex', justifyContent: 'center', border: '1px solid #d0d0d0', padding: '8px' }}>
+            <div style={{ flex: 1, textAlign: 'center', borderRight: '1px solid #d0d0d0', paddingRight: '8px' }}>
+              <span style={{ fontWeight: 'bold', color: '#1976d2' }}>{Number(row.original.cwppToday.toFixed(2)).toLocaleString()}</span>
+            </div>
+            <div style={{ flex: 1, textAlign: 'center', paddingLeft: '8px' }}>
+              <span style={{ color: '#666' }}>{Number(row.original.cwppPrevious.toFixed(2)).toLocaleString()}</span>
+            </div>
+          </div>
+        )
+      },
+      {
+        header: (
+          <div style={{ textAlign: 'center', border: '1px solid #d0d0d0', padding: '8px' }}>
+            <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>SPU</div>
+            <div style={{ display: 'flex', fontSize: '0.8em' }}>
+              <div style={{ flex: 1, textAlign: 'center', borderRight: '1px solid #d0d0d0', paddingRight: '8px' }}>
+                <span style={{ fontWeight: 'bold', color: '#1976d2' }}>Today</span>
+              </div>
+              <div style={{ flex: 1, textAlign: 'center', paddingLeft: '8px' }}>
+                <span style={{ fontWeight: 'bold', color: '#666' }}>Previous</span>
+              </div>
+            </div>
+          </div>
+        ),
+        accessorKey: 'spu',
+        dataType: 'text',
+        cell: ({ row }) => (
+          <div style={{ display: 'flex', justifyContent: 'center', border: '1px solid #d0d0d0', padding: '8px' }}>
+            <div style={{ flex: 1, textAlign: 'center', borderRight: '1px solid #d0d0d0', paddingRight: '8px' }}>
+              <span style={{ fontWeight: 'bold', color: '#1976d2' }}>{Number(row.original.spuToday.toFixed(2)).toLocaleString()}</span>
+            </div>
+            <div style={{ flex: 1, textAlign: 'center', paddingLeft: '8px' }}>
+              <span style={{ color: '#666' }}>{Number(row.original.spuPrevious.toFixed(2)).toLocaleString()}</span>
+            </div>
+          </div>
+        )
+      },
+      {
+        header: (
+          <div style={{ textAlign: 'center', border: '1px solid #d0d0d0', padding: '8px' }}>
+            <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>Ave Bet</div>
+            <div style={{ display: 'flex', fontSize: '0.8em' }}>
+              <div style={{ flex: 1, textAlign: 'center', borderRight: '1px solid #d0d0d0', paddingRight: '8px' }}>
+                <span style={{ fontWeight: 'bold', color: '#1976d2' }}>Today</span>
+              </div>
+              <div style={{ flex: 1, textAlign: 'center', paddingLeft: '8px' }}>
+                <span style={{ fontWeight: 'bold', color: '#666' }}>Previous</span>
+              </div>
+            </div>
+          </div>
+        ),
+        accessorKey: 'aveBet',
+        dataType: 'text',
+        cell: ({ row }) => (
+          <div style={{ display: 'flex', justifyContent: 'center', border: '1px solid #d0d0d0', padding: '8px' }}>
+            <div style={{ flex: 1, textAlign: 'center', borderRight: '1px solid #d0d0d0', paddingRight: '8px' }}>
+              <span style={{ fontWeight: 'bold', color: '#1976d2' }}>{Number(row.original.aveBetToday.toFixed(2)).toLocaleString()}%</span>
+            </div>
+            <div style={{ flex: 1, textAlign: 'center', paddingLeft: '8px' }}>
+              <span style={{ color: '#666' }}>{Number(row.original.aveBetPrevious.toFixed(2)).toLocaleString()}%</span>
+            </div>
+          </div>
+        )
+      },
+      {
+        header: (
+          <div style={{ textAlign: 'center', border: '1px solid #d0d0d0', padding: '8px' }}>
+            <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>Total Coins</div>
+            <div style={{ display: 'flex', fontSize: '0.8em' }}>
+              <div style={{ flex: 1, textAlign: 'center', borderRight: '1px solid #d0d0d0', paddingRight: '8px' }}>
+                <span style={{ fontWeight: 'bold', color: '#1976d2' }}>Today</span>
+              </div>
+              <div style={{ flex: 1, textAlign: 'center', paddingLeft: '8px' }}>
+                <span style={{ fontWeight: 'bold', color: '#666' }}>Previous</span>
+              </div>
+            </div>
+          </div>
+        ),
+        accessorKey: 'totalCoins',
+        dataType: 'text',
+        cell: ({ row }) => (
+          <div style={{ display: 'flex', justifyContent: 'center', border: '1px solid #d0d0d0', padding: '8px' }}>
+            <div style={{ flex: 1, textAlign: 'center', borderRight: '1px solid #d0d0d0', paddingRight: '8px' }}>
+              <span style={{ fontWeight: 'bold', color: '#1976d2' }}>{Number(row.original.totalCoinsToday).toLocaleString()}</span>
+            </div>
+            <div style={{ flex: 1, textAlign: 'center', paddingLeft: '8px' }}>
+              <span style={{ color: '#666' }}>{Number(row.original.totalCoinsPrevious).toLocaleString()}</span>
+            </div>
+          </div>
+        )
+      }
+    ],
+    []
+  );
+
   return (
     <Grid item xs={12} lg={12}>
       <Grid container spacing={{ xs: 1, sm: 2 }} mb={5}>
@@ -657,10 +834,32 @@ function GameCards({ data, games }) {
           </MainCard>
         </Grid>
 
+        <Grid item xs={12} sm={6} lg={3}>
+          <MainCard sx={{ height: "100%", display: "flex", alignItems: "center" }}>
+            {
+              years?.map((y, index) =>
+                <Stack direction={'row'} spacing={1} alignItems="center" justifyContent="start" key={index} sx={{ textAlign: 'center' }}>
+                  <Typography variant={{ xs: 'h6', sm: 'h5' }} textAlign={'center'} sx={{ fontWeight: 'bold' }}>{`Total Revenue ${y} - `}</Typography>
+                  <Typography variant={{ xs: 'h6', sm: 'h6' }} textAlign={'center'}>
+                    {
+                      Number(gamesData.reduce((acc, game) => acc + (game[`totalGGR_${y}`] || 0), 0)).toLocaleString()
+                    }
+                  </Typography>
+                </Stack>
+              )
+            }
+          </MainCard>
+        </Grid>
+
       </Grid>
       <Stack mb={5} spacing={{ xs: 2, sm: 3 }}>
         <Typography variant={{ xs: 'h4', sm: 'h3', md: 'h2' }} textAlign={'center'}>Games Data</Typography>
         <ReactTable {...{ data: gamesData, columns: gamesColumns }} />
+      </Stack>
+      
+      <Stack mb={5} spacing={{ xs: 2, sm: 3 }}>
+        <Typography variant={{ xs: 'h4', sm: 'h3', md: 'h2' }} textAlign={'center'}>Today vs Previous Day Comparison</Typography>
+        <ReactTable {...{ data: comparisonData, columns: comparisonColumns }} />
       </Stack>
       <Stack mb={5} spacing={{ xs: 2, sm: 3 }}>
         <Typography variant={{ xs: 'h4', sm: 'h3', md: 'h2' }} textAlign={'center'}>TOTAL GGR - QUARTER</Typography>

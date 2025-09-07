@@ -1,6 +1,6 @@
 import { useParams, useNavigate } from "react-router";
 import ReactApexChart from 'react-apexcharts';
-import { Grid, Stack, Typography, Box, TextField, Chip, Dialog, DialogActions, DialogContent, DialogTitle, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Tooltip } from '@mui/material';
+import { Grid, Stack, Typography, Box, TextField, Chip, Dialog, DialogActions, DialogContent, DialogTitle, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Tooltip, ToggleButton, ToggleButtonGroup } from '@mui/material';
 
 import ComponentSkeleton from 'sections/components-overview/ComponentSkeleton';
 import MainCard from 'components/MainCard';
@@ -39,6 +39,9 @@ const ReportOnePage = () => {
     const [ reports, setReports ] = useState([]);
     const [ totalGGR, setTotalGGR ] = useState([]);
     const [ totalGGROptions, setTotalGGROptions ] = useState(lineChartOptions);
+    const [ dataView, setDataView ] = useState('all'); // 'all', 'exclusive', 'launch'
+    const [ allReportsData, setAllReportsData ] = useState([]); // Store all data for filtering
+    const [ allGraphData, setAllGraphData ] = useState([]); // Store all graph data for filtering
 
     const tableColumn = useMemo(
         () => [
@@ -46,8 +49,19 @@ const ReportOnePage = () => {
                 header: '',
                 accessorKey: 'day',
                 dataType: 'text', 
-                cell: ({ getValue }) => {
-                    return <div style={{ textWrap: "nowrap" }}>{getValue()}</div>
+                cell: ({ getValue, row }) => {
+                    const isSeparator = row.original.isSeparator;
+                    return (
+                        <div style={{ 
+                            textWrap: "nowrap",
+                            fontWeight: isSeparator ? 'bold' : 'normal',
+                            backgroundColor: isSeparator ? '#f0f0f0' : 'transparent',
+                            padding: isSeparator ? '8px' : '0',
+                            textAlign: 'center'
+                        }}>
+                            {getValue()}
+                        </div>
+                    );
                 }
             },
             {
@@ -131,8 +145,16 @@ const ReportOnePage = () => {
                 const gameData = response.data.game;
                 const reportData = response.data.reports;
 
-                const sortData = [...reportData].filter((item) => new Date(item.summary) >= new Date(gameData?.launchDate));
-                sortData.sort((a, b) => new Date(a.summary) - new Date(b.summary));
+                // Separate exclusive and launch data
+                const exclusiveData = [...reportData].filter((item) => new Date(item.summary) < new Date(gameData?.launchDate));
+                const launchData = [...reportData].filter((item) => new Date(item.summary) >= new Date(gameData?.launchDate));
+                
+                // Sort both datasets
+                exclusiveData.sort((a, b) => new Date(a.summary) - new Date(b.summary));
+                launchData.sort((a, b) => new Date(a.summary) - new Date(b.summary));
+
+                // Combine data: exclusive first, then launch
+                const sortData = [...exclusiveData, ...launchData];
 
                 const totalGGRGroupedData = Object.values(
                     sortData.reduce((acc, { game, ggrEuro, summary, uniquePlayers}) => {
@@ -148,6 +170,7 @@ const ReportOnePage = () => {
 
                 if(  totalGGRGroupedData.length > 0 ) {
                     setTotalGGR(totalGGRGroupedData);
+                    setAllGraphData(totalGGRGroupedData); // Store original graph data
         
                     const dateCounts = totalGGRGroupedData[0].data.length;
                     setTotalGGROptions({
@@ -164,34 +187,146 @@ const ReportOnePage = () => {
                 let totalGGR = 0;
                 let totalCoins = 0;
                 let totalCoinsWagered = 0;
+                let dayCounter = 1;
 
-                const tableData = sortData?.map((item, index) => {
+                const tableData = [];
 
+                // Process exclusive data
+                exclusiveData.forEach((item, index) => {
                     totalGGR += item.ggrEuro;
                     totalCoins += item.betsEuro;
                     totalCoinsWagered += item.betsEuro;
                     const spinsPerUser = item.spins / item.uniquePlayers;
                     const coinsWageredPerUser = item.betsEuro / item.uniquePlayers;
 
-                    return {
-                        day: `Day ${ index + 1 }`, 
+                    tableData.push({
+                        day: `Exclusive Day ${ index + 1 }`, 
                         totalGGR, 
                         totalCoins, 
                         spinsPerUser, 
                         coinsWageredPerUser, 
                         totalCoinsWagered, 
                         ...item
-                    }
-                })
+                    });
+                });
+
+                // Add separator row if there's exclusive data
+                if (exclusiveData.length > 0) {
+                    tableData.push({
+                        day: "--- LAUNCH DATA ---",
+                        game: "",
+                        betsEuro: "",
+                        winsEuro: "",
+                        ggrEuro: "",
+                        avgBet: "",
+                        spins: "",
+                        uniquePlayers: "",
+                        totalGGR: "",
+                        spinsPerUser: "",
+                        coinsWageredPerUser: "",
+                        totalCoinsWagered: "",
+                        isSeparator: true
+                    });
+                }
+
+                // Process launch data with Day 1, Day 2, etc.
+                launchData.forEach((item, index) => {
+                    totalGGR += item.ggrEuro;
+                    totalCoins += item.betsEuro;
+                    totalCoinsWagered += item.betsEuro;
+                    const spinsPerUser = item.spins / item.uniquePlayers;
+                    const coinsWageredPerUser = item.betsEuro / item.uniquePlayers;
+
+                    tableData.push({
+                        day: `Day ${ dayCounter }`, 
+                        totalGGR, 
+                        totalCoins, 
+                        spinsPerUser, 
+                        coinsWageredPerUser, 
+                        totalCoinsWagered, 
+                        ...item
+                    });
+                    dayCounter++;
+                });
 
                 console.log(tableData)
 
+                setAllReportsData(tableData);
                 setReports(tableData);
             }
         }
 
         fetchGameData()
     }, [])
+
+    // Function to filter data based on selected view
+    const filterDataByView = (view) => {
+        if (!allReportsData.length) return;
+
+        if (view === 'all') {
+            setReports(allReportsData);
+            setTotalGGR(allGraphData);
+        } else if (view === 'exclusive') {
+            const exclusiveData = allReportsData.filter(item => 
+                item.day.includes('Exclusive Day') || item.isSeparator
+            );
+            setReports(exclusiveData);
+            
+            // Filter graph data for exclusive only
+            const exclusiveCount = allReportsData.filter(item => item.day.includes('Exclusive Day')).length;
+            if (allGraphData.length > 0) {
+                const filteredGraphData = [{
+                    ...allGraphData[0],
+                    data: allGraphData[0].data.slice(0, exclusiveCount),
+                    dataSum: allGraphData[0].dataSum.slice(0, exclusiveCount)
+                }];
+                setTotalGGR(filteredGraphData);
+                
+                // Update x-axis categories for exclusive data
+                setTotalGGROptions({
+                    ...totalGGROptions,
+                    xaxis: {
+                        categories: Array.from({ length: exclusiveCount }, (_, i) => `Exclusive Day ${i + 1}`), 
+                        labels: {show: false}
+                    }
+                });
+            }
+        } else if (view === 'launch') {
+            const launchData = allReportsData.filter(item => 
+                item.day.includes('Day ') && !item.day.includes('Exclusive Day') && !item.isSeparator
+            );
+            setReports(launchData);
+            
+            // Filter graph data for launch only
+            const exclusiveCount = allReportsData.filter(item => item.day.includes('Exclusive Day')).length;
+            if (allGraphData.length > 0) {
+                const filteredGraphData = [{
+                    ...allGraphData[0],
+                    data: allGraphData[0].data.slice(exclusiveCount),
+                    dataSum: allGraphData[0].dataSum.slice(exclusiveCount)
+                }];
+                setTotalGGR(filteredGraphData);
+                
+                // Update x-axis categories for launch data
+                const launchCount = allGraphData[0].data.length - exclusiveCount;
+                setTotalGGROptions({
+                    ...totalGGROptions,
+                    xaxis: {
+                        categories: Array.from({ length: launchCount }, (_, i) => `Day ${i + 1}`), 
+                        labels: {show: false}
+                    }
+                });
+            }
+        }
+    };
+
+    // Handle data view change
+    const handleDataViewChange = (event, newView) => {
+        if (newView !== null) {
+            setDataView(newView);
+            filterDataByView(newView);
+        }
+    };
 
 
 
@@ -206,6 +341,32 @@ const ReportOnePage = () => {
                             Back
                         </Button>
                     </Grid>
+                </Stack>
+
+                <Stack mb={3} spacing={2} alignItems="center">
+                    <Typography variant="h6" textAlign={'center'}>Data View Options</Typography>
+                    <ToggleButtonGroup
+                        value={dataView}
+                        exclusive
+                        onChange={handleDataViewChange}
+                        aria-label="data view selection"
+                        sx={{ 
+                            '& .MuiToggleButton-root': {
+                                fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                                padding: { xs: '6px 12px', sm: '8px 16px' }
+                            }
+                        }}
+                    >
+                        <ToggleButton value="all" aria-label="all data">
+                            All Data
+                        </ToggleButton>
+                        <ToggleButton value="exclusive" aria-label="exclusive data">
+                            Exclusive Data
+                        </ToggleButton>
+                        <ToggleButton value="launch" aria-label="launch data">
+                            Launch Data
+                        </ToggleButton>
+                    </ToggleButtonGroup>
                 </Stack>
 
                 <Stack mb={5}>
