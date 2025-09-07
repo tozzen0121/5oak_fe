@@ -89,8 +89,10 @@ export function ReactFixedHeaderTable({
         {...props} 
         sx={{ 
           borderCollapse: 'separate', 
-          tableLayout: isMobile ? 'auto' : 'fixed',
-          minWidth: isMobile ? '100%' : 'auto'
+          borderSpacing: 0,
+          tableLayout: 'auto',
+          minWidth: '100%',
+          width: '100%'
         }} 
       />
     ),
@@ -111,12 +113,19 @@ export function ReactFixedHeaderTable({
               sx={{ 
                 backgroundColor: '#f0f0f0',
                 width: header.column.columnDef.meta?.width || 'auto',
-                padding: isMobile ? (isSmallMobile ? '4px 6px' : '6px 8px') : '8px 16px',
+                padding: isMobile ? (isSmallMobile ? '16px 8px' : '20px 12px') : '24px 16px',
                 fontWeight: 'bold',
                 fontSize: isMobile ? (isSmallMobile ? '0.7rem' : '0.75rem') : '0.875rem',
-                minWidth: isMobile ? '80px' : 'auto',
+                minWidth: isMobile ? '100px' : '120px',
+                maxWidth: '200px',
                 textAlign: isMobile ? 'center' : 'left',
-                whiteSpace: isMobile ? 'nowrap' : 'normal'
+                whiteSpace: 'normal',
+                height: isMobile ? '80px' : '88px',
+                verticalAlign: 'middle',
+                lineHeight: '1.2',
+                wordWrap: 'break-word',
+                overflowWrap: 'break-word',
+                boxSizing: 'border-box'
               }}
             >
               {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
@@ -136,11 +145,16 @@ export function ReactFixedHeaderTable({
             {...cell.column.columnDef.meta}
             sx={{ 
               width: cell.column.columnDef.meta?.width || 'auto',
-              padding: isMobile ? (isSmallMobile ? '4px 6px' : '6px 8px') : '8px 16px',
+              padding: isMobile ? (isSmallMobile ? '8px 6px' : '10px 8px') : '12px 16px',
               fontSize: isMobile ? (isSmallMobile ? '0.7rem' : '0.75rem') : '0.875rem',
-              minWidth: isMobile ? '80px' : 'auto',
+              minWidth: isMobile ? '100px' : '120px',
+              maxWidth: '200px',
               textAlign: isMobile ? 'center' : 'left',
-              whiteSpace: isMobile ? 'nowrap' : 'normal'
+              whiteSpace: isMobile ? 'nowrap' : 'normal',
+              backgroundColor: 'white',
+              boxSizing: 'border-box',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis'
             }}
           >
             {flexRender(cell.column.columnDef.cell, cell.getContext())}

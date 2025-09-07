@@ -257,6 +257,7 @@ function GameCards({ data, games }) {
   const [gamesData, setGamesData] = useState([]);
   const [years, setYears] = useState([]);
   const [quaters, setQuater] = useState([]);
+  const [highestDailyGGR, setHighestDailyGGR] = useState({ value: 0, date: '' });
 
   useEffect(() => {
 
@@ -311,8 +312,11 @@ function GameCards({ data, games }) {
             secLatestWeekStart: '',
             latestWeekGGR: [],
             secLatestWeekGGR: [],
+            latestWeekAvgBet: [],
+            secLatestWeekAvgBet: [],
             remainDays: 0,
             weekAverage: 0,
+            weekAvgBet: 0,
             weekChange: 0,
             weekSum1: 0,
             weekSum2: 0,
@@ -322,12 +326,22 @@ function GameCards({ data, games }) {
             LifeTimePayout: 0,
             betsEuro: betsEuro,
             winsEuro: winsEuro,
+            dailyAvgBet: 0,
+            totalAvgBet: 0,
+            avgBetCount: 0,
           }
         }
         const gameItem = games.find((g) => g.name === game)
         acc[game].launchDate = gameItem.launchDate
         acc[game]._id = gameItem._id
         acc[game].totalGGR += ggrEuro
+
+        // Calculate daily average bet
+        if (avgBet && avgBet > 0) {
+          acc[game].totalAvgBet += avgBet;
+          acc[game].avgBetCount += 1;
+          acc[game].dailyAvgBet = acc[game].totalAvgBet / acc[game].avgBetCount;
+        }
 
         const year = summary.split("-")[0]
         if (!acc[game].years[year]) acc[game].years[year] = 0
@@ -340,16 +354,23 @@ function GameCards({ data, games }) {
         if (!acc[game][`totalGGR_${yearQuater}`]) acc[game][`totalGGR_${yearQuater}`] = 0;
         acc[game][`totalGGR_${yearQuater}`] += ggrEuro
 
-        acc[game].projectedTotalGGR = acc[game].totalGGR + acc[game].weekAverage * acc[game].remainDays
-
         if (new Date(gameItem.launchDate) <= new Date(summary)) {
           const isMaxDate = new Date(acc[game].maxDate) < new Date(summary)
           acc[game].maxDate = isMaxDate ? summary : acc[game].maxDate
           acc[game].dailyTotalGGR = isMaxDate ? ggrEuro : acc[game].dailyTotalGGR
-
           const today = new Date(acc[game].maxDate);
           const endOfYear = new Date(today.getFullYear(), 11, 31);
           acc[game].remainDays = Math.ceil((endOfYear - today) / (1000 * 60 * 60 * 24));
+
+          // Get current year for year-to-date calculation
+          const currentYear = today.getFullYear().toString();
+          const yearToDateGGR = acc[game][`totalGGR_${currentYear}`] || 0;
+
+          // Projected GGR for remaining days using 7-day average
+          const projectedRemainingGGR = acc[game].weekAverage * acc[game].remainDays;
+
+          // Total projected GGR for the year (year-to-date + projected remaining)
+          acc[game].projectedTotalGGR = yearToDateGGR + projectedRemainingGGR;
 
 
           // Calculate latest week and second latest week GGR
@@ -374,18 +395,44 @@ function GameCards({ data, games }) {
             .filter(d => d.game === game && new Date(d.summary) >= secLatestWeekStart && new Date(d.summary) <= secLatestWeekEnd)
             .map((d) => d.ggrEuro);
 
+          // Calculate 7-day average bet data
+          acc[game].latestWeekAvgBet = data
+            .filter(d => d.game === game && new Date(d.summary) >= latestWeekStart && new Date(d.summary) <= maxDateObj)
+            .map((d) => d.avgBet || 0);
+
+          acc[game].secLatestWeekAvgBet = data
+            .filter(d => d.game === game && new Date(d.summary) >= secLatestWeekStart && new Date(d.summary) <= secLatestWeekEnd)
+            .map((d) => d.avgBet || 0);
+
           acc[game].weekSum1 = acc[game].latestWeekGGR.reduce((a, b) => a + b, 0)
           acc[game].weekSum2 = acc[game].secLatestWeekGGR.reduce((a, b) => a + b, 0)
           acc[game].weekAverage = acc[game].latestWeekGGR.reduce((a, b) => a + b, 0) / acc[game].latestWeekGGR.length;
+
+          // Calculate 7-day average bet
+          const validAvgBets = acc[game].latestWeekAvgBet.filter(bet => bet > 0);
+          acc[game].weekAvgBet = validAvgBets.length > 0 ? validAvgBets.reduce((a, b) => a + b, 0) / validAvgBets.length : 0;
           acc[game].weekChange = (acc[game].latestWeekGGR.reduce((a, b) => a + b, 0) - acc[game].secLatestWeekGGR.reduce((a, b) => a + b, 0)) / acc[game].secLatestWeekGGR.reduce((a, b) => a + b, 0) * 100;
           acc[game].weekChangeColor = <span style={{ color: acc[game].weekChange > 0 ? "green" : "red" }}>{`${Number(acc[game].weekChange.toFixed(2)).toLocaleString()} %`}</span>
-          acc[game].LifeTimePayout = (acc[game].winsEuro / acc[game].betsEuro).toFixed(2);
+          acc[game].LifeTimePayout = acc[game].betsEuro > 0 ? ((acc[game].winsEuro / acc[game].betsEuro) * 100).toFixed(2) : 0;
         }
 
         return acc;
       }, {})
     )
     setGamesData(gameData)
+
+    // Calculate highest daily GGR record
+    const dailyGGRTotals = data.reduce((acc, { summary, ggrEuro }) => {
+      if (!acc[summary]) {
+        acc[summary] = 0;
+      }
+      acc[summary] += ggrEuro;
+      return acc;
+    }, {});
+
+    const highestDailyGGR = Math.max(...Object.values(dailyGGRTotals));
+    const highestDailyGGRDate = Object.keys(dailyGGRTotals).find(date => dailyGGRTotals[date] === highestDailyGGR);
+    setHighestDailyGGR({ value: highestDailyGGR, date: highestDailyGGRDate });
 
   }, [data, games])
   const gamesColumns = useMemo(
@@ -439,6 +486,24 @@ function GameCards({ data, games }) {
         cell: separateByComma
       },
       {
+        header: 'Daily Average Bet',
+        accessorKey: 'dailyAvgBet',
+        dataType: 'text',
+        cell: ({ getValue }) => {
+          const value = getValue();
+          return value ? `${Number(value.toFixed(2)).toLocaleString()}%` : '0%';
+        }
+      },
+      {
+        header: '7 Day Average Bet',
+        accessorKey: 'weekAvgBet',
+        dataType: 'text',
+        cell: ({ getValue }) => {
+          const value = getValue();
+          return value ? `${Number(value.toFixed(2)).toLocaleString()}%` : '0%';
+        }
+      },
+      {
         header: '7 Day Change',
         accessorKey: 'weekChangeColor',
         dataType: 'text',
@@ -447,6 +512,10 @@ function GameCards({ data, games }) {
         header: 'Lifetime Payout',
         accessorKey: 'LifeTimePayout',
         dataType: 'text',
+        cell: ({ getValue }) => {
+          const value = getValue();
+          return value ? `${value}%` : '0.00%';
+        }
       }
     ],
     [years]
@@ -492,13 +561,27 @@ function GameCards({ data, games }) {
       <Grid container spacing={{ xs: 1, sm: 2 }} mb={5}>
         <Grid item xs={12} sm={6} lg={3}>
           <MainCard sx={{ height: "100%", display: "flex", alignItems: "center" }} >
-            <Stack direction={'row'} spacing={1} alignItems="center" justifyContent="center" sx={{ textAlign: 'center' }}>
-              <Typography variant={{ xs: 'h6', sm: 'h5' }} textAlign={'center'} sx={{ fontWeight: 'bold' }}>Lifetime GGR - </Typography>
-              <Typography variant={{ xs: 'h6', sm: 'h6' }} textAlign={'center'}>
-                {
-                  Number(gamesData.reduce((acc, game) => acc + game.totalGGR, 0)).toLocaleString()
-                }
-              </Typography>
+            <Stack direction={'column'} spacing={1} alignItems="center" justifyContent="center" sx={{ textAlign: 'center' }}>
+              <Stack direction={'row'} spacing={1} alignItems="center" justifyContent="center">
+                <Typography variant={{ xs: 'h6', sm: 'h5' }} textAlign={'center'} sx={{ fontWeight: 'bold' }}>Lifetime GGR - </Typography>
+                <Typography variant={{ xs: 'h6', sm: 'h6' }} textAlign={'center'}>
+                  {
+                    Number(gamesData.reduce((acc, game) => acc + game.totalGGR, 0)).toLocaleString()
+                  }
+                </Typography>
+              </Stack>
+              <Stack direction={'row'} spacing={1} alignItems="center" justifyContent="center">
+                <Typography variant={{ xs: 'h6', sm: 'h5' }} textAlign={'center'} sx={{ fontWeight: 'bold' }}>Highest Daily GGR Record - </Typography>
+                <Typography variant={{ xs: 'h6', sm: 'h6' }} textAlign={'center'} sx={{ fontWeight: 'bold', color: 'primary.main' }}>
+                  {Number(highestDailyGGR.value).toLocaleString()}
+                </Typography>
+              </Stack>
+                <Stack direction={'row'} spacing={1} alignItems="center" justifyContent="center">
+                  <Typography variant={{ xs: 'h6', sm: 'h5' }} textAlign={'center'} sx={{ fontWeight: 'bold' }}>Date - </Typography>
+                  <Typography variant={{ xs: 'h6', sm: 'h6' }} textAlign={'center'} sx={{ fontWeight: 'bold' }}>
+                    {highestDailyGGR.date ? highestDailyGGR.date.split('T')[0] : ''}
+                  </Typography>
+                </Stack>
             </Stack>
           </MainCard>
         </Grid>
@@ -1177,8 +1260,8 @@ const ReportPage = () => {
         });
         setDates(days);
         setTotalGGROptions((pre) => ({ ...pre, xaxis: { categories: days, labels: { show: false } } }))
-        setTotalCoinsWageredOptions((pre) => ({ 
-          ...pre, 
+        setTotalCoinsWageredOptions((pre) => ({
+          ...pre,
           xaxis: { categories: days, labels: { show: false } },
           title: {
             text: 'Daily Total Coins Wagered (All Games)',
@@ -1556,8 +1639,8 @@ const ReportPage = () => {
       });
       setDates(days);
       setTotalGGROptions((pre) => ({ ...pre, xaxis: { categories: days, labels: { show: false } } }))
-      setTotalCoinsWageredOptions((pre) => ({ 
-        ...pre, 
+      setTotalCoinsWageredOptions((pre) => ({
+        ...pre,
         xaxis: { categories: days, labels: { show: false } },
         title: {
           text: 'Daily Total Coins Wagered (All Games)',

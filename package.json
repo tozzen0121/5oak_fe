@@ -114,8 +114,9 @@
     "yup": "^1.2.0"
   },
   "scripts": {
-    "start": "vite",
+    "start": "vite --port 5173",
     "build": "vite build",
+    "dev": "vite dev",
     "preview": "vite preview"
   },
   "eslintConfig": {
