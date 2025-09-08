@@ -325,13 +325,17 @@ function GameCards({ data, games }) {
             dailyTotalGGR: 0,
             projectedTotalGGR: 0,
             LifeTimePayout: 0,
-            betsEuro: betsEuro,
-            winsEuro: winsEuro,
+            betsEuro: 0,
+            winsEuro: 0,
             dailyAvgBet: 0,
             totalAvgBet: 0,
             avgBetCount: 0,
           }
         }
+        
+        // Accumulate betsEuro and winsEuro over time
+        acc[game].betsEuro += betsEuro;
+        acc[game].winsEuro += winsEuro;
         const gameItem = games.find((g) => g.name === game)
         acc[game].launchDate = gameItem.launchDate
         acc[game]._id = gameItem._id
@@ -437,28 +441,30 @@ function GameCards({ data, games }) {
 
     // Calculate today vs previous day comparison data
     const today = new Date();
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
-    
     const todayStr = today.toISOString().split('T')[0];
-    const yesterdayStr = yesterday.toISOString().split('T')[0];
     
     const comparisonData = games.map(game => {
       const todayData = data.find(d => d.game === game.name && d.summary.split('T')[0] === todayStr);
-      const yesterdayData = data.find(d => d.game === game.name && d.summary.split('T')[0] === yesterdayStr);
+      
+      // Find the latest valid data that is NOT today
+      const gameData = data
+        .filter(d => d.game === game.name && d.summary.split('T')[0] !== todayStr)
+        .sort((a, b) => new Date(b.summary) - new Date(a.summary));
+      
+      const latestValidData = gameData[0]; // Most recent data that is not today
       
       return {
         gameName: game.name,
         totalUsersToday: todayData?.uniquePlayers || 0,
-        totalUsersPrevious: yesterdayData?.uniquePlayers || 0,
+        totalUsersPrevious: latestValidData?.uniquePlayers || 0,
         cwppToday: todayData ? (todayData.betsEuro / todayData.uniquePlayers) : 0,
-        cwppPrevious: yesterdayData ? (yesterdayData.betsEuro / yesterdayData.uniquePlayers) : 0,
+        cwppPrevious: latestValidData ? (latestValidData.betsEuro / latestValidData.uniquePlayers) : 0,
         spuToday: todayData ? (todayData.spins / todayData.uniquePlayers) : 0,
-        spuPrevious: yesterdayData ? (yesterdayData.spins / yesterdayData.uniquePlayers) : 0,
+        spuPrevious: latestValidData ? (latestValidData.spins / latestValidData.uniquePlayers) : 0,
         aveBetToday: todayData?.avgBet || 0,
-        aveBetPrevious: yesterdayData?.avgBet || 0,
+        aveBetPrevious: latestValidData?.avgBet || 0,
         totalCoinsToday: todayData?.betsEuro || 0,
-        totalCoinsPrevious: yesterdayData?.betsEuro || 0
+        totalCoinsPrevious: latestValidData?.betsEuro || 0
       };
     });
     
@@ -521,7 +527,7 @@ function GameCards({ data, games }) {
         dataType: 'text',
         cell: ({ getValue }) => {
           const value = getValue();
-          return value ? `${Number(value.toFixed(2)).toLocaleString()}%` : '0%';
+          return value ? `${Number(value.toFixed(2)).toLocaleString()}` : '0.00';
         }
       },
       {
@@ -530,7 +536,7 @@ function GameCards({ data, games }) {
         dataType: 'text',
         cell: ({ getValue }) => {
           const value = getValue();
-          return value ? `${Number(value.toFixed(2)).toLocaleString()}%` : '0%';
+          return value ? `${Number(value.toFixed(2)).toLocaleString()}` : '0.00';
         }
       },
       {
@@ -1978,6 +1984,9 @@ const ReportPage = () => {
                   <Link to={onlyPassword ? `/admin/report-type/cwpp/launch` : `/report-type/cwpp/launch`}>
                     <Button loading={loading} variant="contained" component="span" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' }, padding: { xs: '6px 12px', sm: '8px 16px' } }}>CWPP</Button>
                   </Link>
+                  <Link to={onlyPassword ? `/admin/report-type/totalCoinsWageredPerDay/launch` : `/report-type/totalCoinsWageredPerDay/launch`}>
+                    <Button loading={loading} variant="contained" component="span" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' }, padding: { xs: '6px 12px', sm: '8px 16px' } }}>Total Coins Wagered Per Day</Button>
+                  </Link>
                 </Stack>
               </Grid>
             </Stack>
@@ -2001,6 +2010,9 @@ const ReportPage = () => {
                   </Link>
                   <Link to={onlyPassword ? `/admin/report-type/cwpp/exclusive` : `/report-type/cwpp/exclusive`}>
                     <Button loading={loading} variant="contained" component="span" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' }, padding: { xs: '6px 12px', sm: '8px 16px' } }}>CWPP</Button>
+                  </Link>
+                  <Link to={onlyPassword ? `/admin/report-type/totalCoinsWageredPerDay/exclusive` : `/report-type/totalCoinsWageredPerDay/exclusive`}>
+                    <Button loading={loading} variant="contained" component="span" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' }, padding: { xs: '6px 12px', sm: '8px 16px' } }}>Total Coins Wagered Per Day</Button>
                   </Link>
                 </Stack>
               </Grid>

@@ -57,7 +57,7 @@ const ReportTypePage = () => {
                 const calculatedData = 
                     filteredData.reduce((acc, { game, ggrEuro, uniquePlayers, spins, betsEuro }) => {
                       if (!acc[game]) {
-                        acc[game] = { name: game, users: [], totalGGR: [], spinsPerUser: [], totalCoins: [], cwpp: [], totalGGRValue: 0, totalCoinValue: 0 }; // Added `totalGGR`
+                        acc[game] = { name: game, users: [], totalGGR: [], spinsPerUser: [], totalCoins: [], cwpp: [], totalCoinsWageredPerDay: [], totalGGRValue: 0, totalCoinValue: 0 }; // Added `totalCoinsWageredPerDay`
                       }
             
                       acc[game].totalGGRValue += ggrEuro;
@@ -67,6 +67,7 @@ const ReportTypePage = () => {
                       acc[game].spinsPerUser.push((spins / uniquePlayers).toFixed(2));
                       acc[game].cwpp.push((betsEuro / uniquePlayers).toFixed(2));
                       acc[game].totalCoins.push(acc[game].totalCoinValue.toFixed(2));
+                      acc[game].totalCoinsWageredPerDay.push(betsEuro.toFixed(2)); // Daily betsEuro amount
                       return acc;
                     }, {})
 
@@ -93,6 +94,8 @@ const ReportTypePage = () => {
                                 obj[game] = Number(i < gameData.totalCoins.length ? gameData.totalCoins[i] : 0);
                             } else if (type === "cwpp") {
                                 obj[game] = Number(i < gameData.cwpp.length ? gameData.cwpp[i] : 0);
+                            } else if (type === "totalCoinsWageredPerDay") {
+                                obj[game] = Number(i < gameData.totalCoinsWageredPerDay.length ? gameData.totalCoinsWageredPerDay[i] : 0);
                             }
                         } else {
                             console.error(`Missing data for game: ${game}`);  // Log if game data is missing
@@ -119,6 +122,8 @@ const ReportTypePage = () => {
             setTitle("Total Coins");
         } else if ( type === "cwpp" ){
             setTitle("CWPP");
+        } else if ( type === "totalCoinsWageredPerDay" ){
+            setTitle("Total Coins Wagered Per Day");
         }
     }, [])
 
