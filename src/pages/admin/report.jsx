@@ -439,32 +439,37 @@ function GameCards({ data, games }) {
     const highestDailyGGRDate = Object.keys(dailyGGRTotals).find(date => dailyGGRTotals[date] === highestDailyGGR);
     setHighestDailyGGR({ value: highestDailyGGR, date: highestDailyGGRDate });
 
-    // Calculate today vs previous day comparison data
-    const today = new Date();
-    const todayStr = today.toISOString().split('T')[0];
+    // Calculate latest report vs previous report comparison data
+    // Find the latest report date from all data
+    const latestReportDate = data.length > 0 
+      ? data.reduce((latest, item) => new Date(item.summary) > new Date(latest) ? item.summary : latest, data[0].summary)
+      : new Date().toISOString().split('T')[0];
+    
+    const latestReportStr = latestReportDate.split('T')[0];
+    
+    // Find the previous report date (day before latest)
+    const previousReportDate = new Date(latestReportDate);
+    previousReportDate.setDate(previousReportDate.getDate() - 1);
+    const previousReportStr = previousReportDate.toISOString().split('T')[0];
     
     const comparisonData = games.map(game => {
-      const todayData = data.find(d => d.game === game.name && d.summary.split('T')[0] === todayStr);
+      const latestData = data.find(d => d.game === game.name && d.summary.split('T')[0] === latestReportStr);
       
-      // Find the latest valid data that is NOT today
-      const gameData = data
-        .filter(d => d.game === game.name && d.summary.split('T')[0] !== todayStr)
-        .sort((a, b) => new Date(b.summary) - new Date(a.summary));
-      
-      const latestValidData = gameData[0]; // Most recent data that is not today
+      // Find the previous day data
+      const previousData = data.find(d => d.game === game.name && d.summary.split('T')[0] === previousReportStr);
       
       return {
         gameName: game.name,
-        totalUsersToday: todayData?.uniquePlayers || 0,
-        totalUsersPrevious: latestValidData?.uniquePlayers || 0,
-        cwppToday: todayData ? (todayData.betsEuro / todayData.uniquePlayers) : 0,
-        cwppPrevious: latestValidData ? (latestValidData.betsEuro / latestValidData.uniquePlayers) : 0,
-        spuToday: todayData ? (todayData.spins / todayData.uniquePlayers) : 0,
-        spuPrevious: latestValidData ? (latestValidData.spins / latestValidData.uniquePlayers) : 0,
-        aveBetToday: todayData?.avgBet || 0,
-        aveBetPrevious: latestValidData?.avgBet || 0,
-        totalCoinsToday: todayData?.betsEuro || 0,
-        totalCoinsPrevious: latestValidData?.betsEuro || 0
+        totalUsersToday: latestData?.uniquePlayers || 0,
+        totalUsersPrevious: previousData?.uniquePlayers || 0,
+        cwppToday: latestData ? (latestData.betsEuro / latestData.uniquePlayers) : 0,
+        cwppPrevious: previousData ? (previousData.betsEuro / previousData.uniquePlayers) : 0,
+        spuToday: latestData ? (latestData.spins / latestData.uniquePlayers) : 0,
+        spuPrevious: previousData ? (previousData.spins / previousData.uniquePlayers) : 0,
+        aveBetToday: latestData?.avgBet || 0,
+        aveBetPrevious: previousData?.avgBet || 0,
+        totalCoinsToday: latestData?.betsEuro || 0,
+        totalCoinsPrevious: previousData?.betsEuro || 0
       };
     });
     
@@ -606,7 +611,7 @@ function GameCards({ data, games }) {
             <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>Total Users</div>
             <div style={{ display: 'flex', fontSize: '0.8em' }}>
               <div style={{ flex: 1, textAlign: 'center', borderRight: '1px solid #d0d0d0', paddingRight: '8px' }}>
-                <span style={{ fontWeight: 'bold', color: '#1976d2' }}>Today</span>
+                <span style={{ fontWeight: 'bold', color: '#1976d2' }}>Latest</span>
               </div>
               <div style={{ flex: 1, textAlign: 'center', paddingLeft: '8px' }}>
                 <span style={{ fontWeight: 'bold', color: '#666' }}>Previous</span>
@@ -633,7 +638,7 @@ function GameCards({ data, games }) {
             <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>CWPP</div>
             <div style={{ display: 'flex', fontSize: '0.8em' }}>
               <div style={{ flex: 1, textAlign: 'center', borderRight: '1px solid #d0d0d0', paddingRight: '8px' }}>
-                <span style={{ fontWeight: 'bold', color: '#1976d2' }}>Today</span>
+                <span style={{ fontWeight: 'bold', color: '#1976d2' }}>Latest</span>
               </div>
               <div style={{ flex: 1, textAlign: 'center', paddingLeft: '8px' }}>
                 <span style={{ fontWeight: 'bold', color: '#666' }}>Previous</span>
@@ -660,7 +665,7 @@ function GameCards({ data, games }) {
             <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>SPU</div>
             <div style={{ display: 'flex', fontSize: '0.8em' }}>
               <div style={{ flex: 1, textAlign: 'center', borderRight: '1px solid #d0d0d0', paddingRight: '8px' }}>
-                <span style={{ fontWeight: 'bold', color: '#1976d2' }}>Today</span>
+                <span style={{ fontWeight: 'bold', color: '#1976d2' }}>Latest</span>
               </div>
               <div style={{ flex: 1, textAlign: 'center', paddingLeft: '8px' }}>
                 <span style={{ fontWeight: 'bold', color: '#666' }}>Previous</span>
@@ -687,7 +692,7 @@ function GameCards({ data, games }) {
             <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>Ave Bet</div>
             <div style={{ display: 'flex', fontSize: '0.8em' }}>
               <div style={{ flex: 1, textAlign: 'center', borderRight: '1px solid #d0d0d0', paddingRight: '8px' }}>
-                <span style={{ fontWeight: 'bold', color: '#1976d2' }}>Today</span>
+                <span style={{ fontWeight: 'bold', color: '#1976d2' }}>Latest</span>
               </div>
               <div style={{ flex: 1, textAlign: 'center', paddingLeft: '8px' }}>
                 <span style={{ fontWeight: 'bold', color: '#666' }}>Previous</span>
@@ -700,10 +705,10 @@ function GameCards({ data, games }) {
         cell: ({ row }) => (
           <div style={{ display: 'flex', justifyContent: 'center', border: '1px solid #d0d0d0', padding: '8px' }}>
             <div style={{ flex: 1, textAlign: 'center', borderRight: '1px solid #d0d0d0', paddingRight: '8px' }}>
-              <span style={{ fontWeight: 'bold', color: '#1976d2' }}>{Number(row.original.aveBetToday.toFixed(2)).toLocaleString()}%</span>
+              <span style={{ fontWeight: 'bold', color: '#1976d2' }}>{Number(row.original.aveBetToday.toFixed(2)).toLocaleString()}</span>
             </div>
             <div style={{ flex: 1, textAlign: 'center', paddingLeft: '8px' }}>
-              <span style={{ color: '#666' }}>{Number(row.original.aveBetPrevious.toFixed(2)).toLocaleString()}%</span>
+              <span style={{ color: '#666' }}>{Number(row.original.aveBetPrevious.toFixed(2)).toLocaleString()}</span>
             </div>
           </div>
         )
@@ -714,7 +719,7 @@ function GameCards({ data, games }) {
             <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>Total Coins</div>
             <div style={{ display: 'flex', fontSize: '0.8em' }}>
               <div style={{ flex: 1, textAlign: 'center', borderRight: '1px solid #d0d0d0', paddingRight: '8px' }}>
-                <span style={{ fontWeight: 'bold', color: '#1976d2' }}>Today</span>
+                <span style={{ fontWeight: 'bold', color: '#1976d2' }}>Latest</span>
               </div>
               <div style={{ flex: 1, textAlign: 'center', paddingLeft: '8px' }}>
                 <span style={{ fontWeight: 'bold', color: '#666' }}>Previous</span>
@@ -864,7 +869,7 @@ function GameCards({ data, games }) {
       </Stack>
       
       <Stack mb={5} spacing={{ xs: 2, sm: 3 }}>
-        <Typography variant={{ xs: 'h4', sm: 'h3', md: 'h2' }} textAlign={'center'}>Today vs Previous Day Comparison</Typography>
+        <Typography variant={{ xs: 'h4', sm: 'h3', md: 'h2' }} textAlign={'center'}>Latest Report vs Previous Report Comparison</Typography>
         <ReactTable {...{ data: comparisonData, columns: comparisonColumns }} />
       </Stack>
       <Stack mb={5} spacing={{ xs: 2, sm: 3 }}>
@@ -1985,7 +1990,7 @@ const ReportPage = () => {
                     <Button loading={loading} variant="contained" component="span" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' }, padding: { xs: '6px 12px', sm: '8px 16px' } }}>CWPP</Button>
                   </Link>
                   <Link to={onlyPassword ? `/admin/report-type/totalCoinsWageredPerDay/launch` : `/report-type/totalCoinsWageredPerDay/launch`}>
-                    <Button loading={loading} variant="contained" component="span" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' }, padding: { xs: '6px 12px', sm: '8px 16px' } }}>Total Coins Wagered Per Day</Button>
+                    <Button loading={loading} variant="contained" component="span" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' }, padding: { xs: '6px 12px', sm: '8px 16px' } }}>TCWPD</Button>
                   </Link>
                 </Stack>
               </Grid>
