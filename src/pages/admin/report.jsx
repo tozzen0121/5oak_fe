@@ -621,16 +621,23 @@ function GameCards({ data, games }) {
         ),
         accessorKey: 'totalUsers',
         dataType: 'text',
-        cell: ({ row }) => (
-          <div style={{ display: 'flex', justifyContent: 'center', border: '1px solid #d0d0d0', padding: '8px' }}>
-            <div style={{ flex: 1, textAlign: 'center', borderRight: '1px solid #d0d0d0', paddingRight: '8px' }}>
-              <span style={{ fontWeight: 'bold', color: '#1976d2' }}>{Number(row.original.totalUsersToday).toLocaleString()}</span>
+        cell: ({ row }) => {
+          const latest = row.original.totalUsersToday;
+          const previous = row.original.totalUsersPrevious;
+          const isHigher = latest > previous;
+          const latestColor = isHigher ? '#4caf50' : '#f44336';
+          
+          return (
+            <div style={{ display: 'flex', justifyContent: 'center', border: '1px solid #d0d0d0', padding: '8px' }}>
+              <div style={{ flex: 1, textAlign: 'center', borderRight: '1px solid #d0d0d0', paddingRight: '8px' }}>
+                <span style={{ fontWeight: 'bold', color: latestColor }}>{Number(latest).toLocaleString()}</span>
+              </div>
+              <div style={{ flex: 1, textAlign: 'center', paddingLeft: '8px' }}>
+                <span style={{ color: '#666' }}>{Number(previous).toLocaleString()}</span>
+              </div>
             </div>
-            <div style={{ flex: 1, textAlign: 'center', paddingLeft: '8px' }}>
-              <span style={{ color: '#666' }}>{Number(row.original.totalUsersPrevious).toLocaleString()}</span>
-            </div>
-          </div>
-        )
+          );
+        }
       },
       {
         header: (
@@ -648,16 +655,23 @@ function GameCards({ data, games }) {
         ),
         accessorKey: 'cwpp',
         dataType: 'text',
-        cell: ({ row }) => (
-          <div style={{ display: 'flex', justifyContent: 'center', border: '1px solid #d0d0d0', padding: '8px' }}>
-            <div style={{ flex: 1, textAlign: 'center', borderRight: '1px solid #d0d0d0', paddingRight: '8px' }}>
-              <span style={{ fontWeight: 'bold', color: '#1976d2' }}>{Number(row.original.cwppToday.toFixed(2)).toLocaleString()}</span>
+        cell: ({ row }) => {
+          const latest = row.original.cwppToday;
+          const previous = row.original.cwppPrevious;
+          const isHigher = latest > previous;
+          const latestColor = isHigher ? '#4caf50' : '#f44336';
+          
+          return (
+            <div style={{ display: 'flex', justifyContent: 'center', border: '1px solid #d0d0d0', padding: '8px' }}>
+              <div style={{ flex: 1, textAlign: 'center', borderRight: '1px solid #d0d0d0', paddingRight: '8px' }}>
+                <span style={{ fontWeight: 'bold', color: latestColor }}>{Number(latest.toFixed(2)).toLocaleString()}</span>
+              </div>
+              <div style={{ flex: 1, textAlign: 'center', paddingLeft: '8px' }}>
+                <span style={{ color: '#666' }}>{Number(previous.toFixed(2)).toLocaleString()}</span>
+              </div>
             </div>
-            <div style={{ flex: 1, textAlign: 'center', paddingLeft: '8px' }}>
-              <span style={{ color: '#666' }}>{Number(row.original.cwppPrevious.toFixed(2)).toLocaleString()}</span>
-            </div>
-          </div>
-        )
+          );
+        }
       },
       {
         header: (
@@ -675,16 +689,23 @@ function GameCards({ data, games }) {
         ),
         accessorKey: 'spu',
         dataType: 'text',
-        cell: ({ row }) => (
-          <div style={{ display: 'flex', justifyContent: 'center', border: '1px solid #d0d0d0', padding: '8px' }}>
-            <div style={{ flex: 1, textAlign: 'center', borderRight: '1px solid #d0d0d0', paddingRight: '8px' }}>
-              <span style={{ fontWeight: 'bold', color: '#1976d2' }}>{Number(row.original.spuToday.toFixed(2)).toLocaleString()}</span>
+        cell: ({ row }) => {
+          const latest = row.original.spuToday;
+          const previous = row.original.spuPrevious;
+          const isHigher = latest > previous;
+          const latestColor = isHigher ? '#4caf50' : '#f44336';
+          
+          return (
+            <div style={{ display: 'flex', justifyContent: 'center', border: '1px solid #d0d0d0', padding: '8px' }}>
+              <div style={{ flex: 1, textAlign: 'center', borderRight: '1px solid #d0d0d0', paddingRight: '8px' }}>
+                <span style={{ fontWeight: 'bold', color: latestColor }}>{Number(latest.toFixed(2)).toLocaleString()}</span>
+              </div>
+              <div style={{ flex: 1, textAlign: 'center', paddingLeft: '8px' }}>
+                <span style={{ color: '#666' }}>{Number(previous.toFixed(2)).toLocaleString()}</span>
+              </div>
             </div>
-            <div style={{ flex: 1, textAlign: 'center', paddingLeft: '8px' }}>
-              <span style={{ color: '#666' }}>{Number(row.original.spuPrevious.toFixed(2)).toLocaleString()}</span>
-            </div>
-          </div>
-        )
+          );
+        }
       },
       {
         header: (
@@ -702,16 +723,23 @@ function GameCards({ data, games }) {
         ),
         accessorKey: 'aveBet',
         dataType: 'text',
-        cell: ({ row }) => (
-          <div style={{ display: 'flex', justifyContent: 'center', border: '1px solid #d0d0d0', padding: '8px' }}>
-            <div style={{ flex: 1, textAlign: 'center', borderRight: '1px solid #d0d0d0', paddingRight: '8px' }}>
-              <span style={{ fontWeight: 'bold', color: '#1976d2' }}>{Number(row.original.aveBetToday.toFixed(2)).toLocaleString()}</span>
+        cell: ({ row }) => {
+          const latest = row.original.aveBetToday;
+          const previous = row.original.aveBetPrevious;
+          const isHigher = latest > previous;
+          const latestColor = isHigher ? '#4caf50' : '#f44336';
+          
+          return (
+            <div style={{ display: 'flex', justifyContent: 'center', border: '1px solid #d0d0d0', padding: '8px' }}>
+              <div style={{ flex: 1, textAlign: 'center', borderRight: '1px solid #d0d0d0', paddingRight: '8px' }}>
+                <span style={{ fontWeight: 'bold', color: latestColor }}>{Number(latest.toFixed(2)).toLocaleString()}</span>
+              </div>
+              <div style={{ flex: 1, textAlign: 'center', paddingLeft: '8px' }}>
+                <span style={{ color: '#666' }}>{Number(previous.toFixed(2)).toLocaleString()}</span>
+              </div>
             </div>
-            <div style={{ flex: 1, textAlign: 'center', paddingLeft: '8px' }}>
-              <span style={{ color: '#666' }}>{Number(row.original.aveBetPrevious.toFixed(2)).toLocaleString()}</span>
-            </div>
-          </div>
-        )
+          );
+        }
       },
       {
         header: (
@@ -729,16 +757,23 @@ function GameCards({ data, games }) {
         ),
         accessorKey: 'totalCoins',
         dataType: 'text',
-        cell: ({ row }) => (
-          <div style={{ display: 'flex', justifyContent: 'center', border: '1px solid #d0d0d0', padding: '8px' }}>
-            <div style={{ flex: 1, textAlign: 'center', borderRight: '1px solid #d0d0d0', paddingRight: '8px' }}>
-              <span style={{ fontWeight: 'bold', color: '#1976d2' }}>{Number(row.original.totalCoinsToday).toLocaleString()}</span>
+        cell: ({ row }) => {
+          const latest = row.original.totalCoinsToday;
+          const previous = row.original.totalCoinsPrevious;
+          const isHigher = latest > previous;
+          const latestColor = isHigher ? '#4caf50' : '#f44336';
+          
+          return (
+            <div style={{ display: 'flex', justifyContent: 'center', border: '1px solid #d0d0d0', padding: '8px' }}>
+              <div style={{ flex: 1, textAlign: 'center', borderRight: '1px solid #d0d0d0', paddingRight: '8px' }}>
+                <span style={{ fontWeight: 'bold', color: latestColor }}>{Number(latest).toLocaleString()}</span>
+              </div>
+              <div style={{ flex: 1, textAlign: 'center', paddingLeft: '8px' }}>
+                <span style={{ color: '#666' }}>{Number(previous).toLocaleString()}</span>
+              </div>
             </div>
-            <div style={{ flex: 1, textAlign: 'center', paddingLeft: '8px' }}>
-              <span style={{ color: '#666' }}>{Number(row.original.totalCoinsPrevious).toLocaleString()}</span>
-            </div>
-          </div>
-        )
+          );
+        }
       }
     ],
     []
@@ -2017,7 +2052,7 @@ const ReportPage = () => {
                     <Button loading={loading} variant="contained" component="span" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' }, padding: { xs: '6px 12px', sm: '8px 16px' } }}>CWPP</Button>
                   </Link>
                   <Link to={onlyPassword ? `/admin/report-type/totalCoinsWageredPerDay/exclusive` : `/report-type/totalCoinsWageredPerDay/exclusive`}>
-                    <Button loading={loading} variant="contained" component="span" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' }, padding: { xs: '6px 12px', sm: '8px 16px' } }}>Total Coins Wagered Per Day</Button>
+                    <Button loading={loading} variant="contained" component="span" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' }, padding: { xs: '6px 12px', sm: '8px 16px' } }}>TCWPD</Button>
                   </Link>
                 </Stack>
               </Grid>
