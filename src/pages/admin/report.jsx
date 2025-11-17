@@ -1630,8 +1630,8 @@ const ReportPage = () => {
         fetchData();
         setLoading(true);
       } catch (error) {
-        console.error("Upload Error:", error);
-        alert("Error uploading file.", error.response.data.message);
+        console.error("Upload Error:", error.message);
+        alert("Error uploading file.", error.message);
       } finally {
         setLoading(false);
         event.target.value = "";
