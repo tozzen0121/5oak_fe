@@ -1628,10 +1628,19 @@ const ReportPage = () => {
 
         // setData(response.data.data)
         fetchData();
-        setLoading(true);
+        setLoading(false);
       } catch (error) {
-        console.error("Upload Error:", error.message);
-        alert("Error uploading file.", error.message);
+        console.error("Upload Error:", error);
+        const errorMessage = error.response?.data?.message || error.message || "Error uploading file. Please check your connection and try again.";
+        
+        openSnackbar({
+          open: true,
+          message: errorMessage,
+          variant: 'alert',
+          alert: {
+            color: 'error'
+          }
+        });
       } finally {
         setLoading(false);
         event.target.value = "";
