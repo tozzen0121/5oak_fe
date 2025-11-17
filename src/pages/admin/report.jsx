@@ -1631,7 +1631,7 @@ const ReportPage = () => {
         setLoading(true);
       } catch (error) {
         console.error("Upload Error:", error);
-        alert("Error uploading file.");
+        alert("Error uploading file.", error.response.data.message);
       } finally {
         setLoading(false);
         event.target.value = "";
